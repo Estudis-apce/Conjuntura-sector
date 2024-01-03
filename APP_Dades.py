@@ -185,13 +185,13 @@ def tidy_present_monthly_diff(data_ori, columns_sel, year):
 
 @st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def indicator_year(df, df_aux, year, variable, tipus, frequency=None):
-    if (year==str(datetime.now().year) and (frequency=="month") and ((tipus=="var") or (tipus=="diff"))):
+    if (year==str(datetime.now().year-1) and (frequency=="month") and ((tipus=="var") or (tipus=="diff"))):
         return(round(tidy_present_monthly(df_aux, variable, year),2))
-    if (year==str(datetime.now().year) and (frequency=="month_aux") and (tipus=="var")):
+    if (year==str(datetime.now().year-1) and (frequency=="month_aux") and (tipus=="var")):
         return(round(tidy_present_monthly_aux(df_aux, variable, year),2))
-    if (year==str(datetime.now().year) and (frequency=="month_aux") and ((tipus=="diff"))):
+    if (year==str(datetime.now().year-1) and (frequency=="month_aux") and ((tipus=="diff"))):
         return(round(tidy_present_monthly_diff(df_aux, variable, year),2))
-    if (year==str(datetime.now().year) and ((tipus=="var") or (tipus=="diff"))):
+    if (year==str(datetime.now().year-1) and ((tipus=="var") or (tipus=="diff"))):
         return(round(tidy_present(df_aux.reset_index(), variable, year),2))
     if tipus=="level":
         df = df[df.index==year][variable]
@@ -393,13 +393,13 @@ if selected == "Espanya":
     selected_type = st.sidebar.radio("", ("Sector residencial","Indicadors econòmics"))
     if selected_type=="Indicadors econòmics":
         selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", ["Índex de Preus al Consum (IPC)", "Consum de ciment","Tipus d'interès", "Hipoteques"])
-        available_years = list(range(2018, datetime.now().year + 1))
-        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(datetime.now().year))
+        available_years = list(range(2018, datetime.now().year))
+        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(datetime.now().year-1))
         if selected_index=="Índex de Preus al Consum (IPC)":
             st.subheader("ÍNDEX DE PREUS AL CONSUM (IPC)")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2002
-            max_year=datetime.now().year
+            max_year=datetime.now().year-1
             table_espanya_m = tidy_Catalunya_mensual(DT_monthly, ["Fecha", "IPC_Nacional_x", "IPC_subyacente", "IGC_Nacional"], f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data","IPC (Base 2021)","IPC subjacent", "IGC"])
             table_espanya_m["Inflació"] = table_espanya_m["IPC (Base 2021)"].pct_change(12).mul(100)
             table_espanya_m["Inflació subjacent"] = round(table_espanya_m["IPC subjacent"].mul(100),1)
@@ -441,7 +441,7 @@ if selected == "Espanya":
             st.subheader("CONSUM DE CIMENT")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2008
-            max_year=datetime.now().year
+            max_year=datetime.now().year-1
             table_espanya_m = tidy_Catalunya_m(DT_monthly, ["Fecha"] + ["cons_ciment_Espanya"], f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Consum de ciment"])
             table_espanya_q = tidy_Catalunya(DT_terr, ["Fecha","cons_ciment_Espanya"],  f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Consum de ciment"])
             table_espanya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","cons_ciment_Espanya"], min_year, max_year,["Any", "Consum de ciment"])
@@ -465,7 +465,7 @@ if selected == "Espanya":
                 st.plotly_chart(bar_plotly(table_espanya_y.pct_change(1).mul(100).dropna(axis=0), ["Consum de ciment"], "Variació anual del consum de ciment (Milers T.)", "%", 2012), use_container_width=True, responsive=True)     
         if selected_index=="Tipus d'interès":
             min_year=2008
-            max_year=datetime.now().year
+            max_year=datetime.now().year-1
             st.subheader("TIPUS D'INTERÈS I POLÍTICA MONETÀRIA")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             table_espanya_m = tidy_Catalunya_mensual(DT_monthly, ["Fecha", "Euribor_1m", "Euribor_3m",	"Euribor_6m", "Euribor_1y", "tipo_hipo"], f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data","Euríbor a 1 mes","Euríbor a 3 mesos","Euríbor a 6 mesos","Euríbor a 1 any", "Tipus d'interès d'hipoteques"])
@@ -514,7 +514,7 @@ if selected == "Espanya":
             st.subheader("IMPORT I NOMBRE D'HIPOTEQUES INSCRITES EN ELS REGISTRES DE PROPIETAT")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2008
-            max_year=datetime.now().year
+            max_year=datetime.now().year-1
             table_espanya_m = tidy_Catalunya_mensual(DT_monthly, ["Fecha", "hipon_Nacional", "hipoimp_Nacional"], f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data","Nombre d'hipoteques", "Import d'hipoteques"])
             table_espanya_m = table_espanya_m[["Data", "Nombre d'hipoteques", "Import d'hipoteques"]].rename(columns={"Data":"Fecha"})
             table_espanya_q = tidy_Catalunya(DT_terr, ["Fecha", "hipon_Nacional", "hipoimp_Nacional"],  f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Nombre d'hipoteques", "Import d'hipoteques"])
@@ -555,11 +555,11 @@ if selected == "Espanya":
 
     if selected_type=="Sector residencial":
         selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", ["Producció", "Compravendes", "Preus"])
-        available_years = list(range(2018, datetime.now().year + 1))
-        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(datetime.now().year))
+        available_years = list(range(2018, datetime.now().year))
+        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(datetime.now().year-1))
         if selected_index=="Producció":
             min_year=2008
-            max_year=datetime.now().year
+            max_year=datetime.now().year-1
             st.subheader("PRODUCCIÓ D'HABITATGES A ESPANYA")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             table_esp_m = tidy_Catalunya_m(DT_monthly, ["Fecha"] + concatenate_lists(["iniviv_","finviv_"], "Nacional"), f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Habitatges iniciats", "Habitatges acabats"])                                                                                                                                                                                                                                                                                                                     
@@ -603,7 +603,7 @@ if selected == "Espanya":
                 st.plotly_chart(stacked_bar_plotly(table_esp_y, selected_columns_aux2, "Qualificacions definitives de protecció oficial segons tipus de promotor", "Nombre d'habitatges", 2014), use_container_width=True, responsive=True)
         if selected_index=="Compravendes":
             min_year=2008
-            max_year=datetime.now().year
+            max_year=datetime.now().year-1
             st.subheader("COMPRAVENDES D'HABITATGES A ESPANYA")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             table_esp_m = tidy_Catalunya_m(DT_monthly, ["Fecha"] + ["trvivses", "trvivnes"], f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Compravendes d'habitatge de segona mà", "Compravendes d'habitatge nou"])
@@ -639,7 +639,7 @@ if selected == "Espanya":
                 st.plotly_chart(stacked_bar_plotly(table_esp_y[table_esp_y.notna()], table_esp.columns.tolist()[1:3], "Compravendes d'habitatge per tipologia d'habitatge", "Nombre de compravendes", 2008), use_container_width=True, responsive=True)
         if selected_index=="Preus":
                 min_year=2008
-                max_year=datetime.now().year  
+                max_year=datetime.now().year-1  
                 st.subheader("VALOR TASAT MITJÀ D'HABITATGE LLIURE €/M\u00b2 (MITMA)")
                 st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
                 table_esp = tidy_Catalunya(DT_terr, ["Fecha", "prvivlfom_Nacional", "prvivlnfom_Nacional"], f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Preu de l'habitatge lliure", "Preu de l'habitatge lliure nou"])
@@ -696,13 +696,13 @@ if selected == "Catalunya":
     selected_indicator = st.sidebar.radio("", ("Sector residencial", "Indicadors econòmics"))
     if selected_indicator=="Indicadors econòmics":
         selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", ["Costos de construcció", "Mercat laboral", "Consum de Ciment", "Hipoteques"])
-        available_years = list(range(2014, datetime.now().year + 1))
-        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(datetime.now().year))
+        available_years = list(range(2014, datetime.now().year))
+        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(datetime.now().year-1))
         if selected_index=="Mercat laboral":
             st.subheader("MERCAT LABORAL DEL SECTOR DE LA CONSTRUCCIÓ")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2008
-            max_year=datetime.now().year
+            max_year=datetime.now().year-1
             table_catalunya_m = tidy_Catalunya_m(DT_monthly, ["Fecha"] + ["unempcons_Catalunya", "aficons_Catalunya"], f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Atur registrat del sector de la construcció", "Afiliats del sector de la construcció"])
             table_catalunya_q = tidy_Catalunya(DT_terr, ["Fecha", "emptot_Catalunya", "empcons_Catalunya", "unempcons_Catalunya", "aficons_Catalunya"],  f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Total població ocupada", "Ocupació del sector de la construcció","Atur registrat del sector de la construcció", "Afiliats del sector de la construcció"])
             table_catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","emptot_Catalunya", "empcons_Catalunya", "unempcons_Catalunya", "aficons_Catalunya"], min_year, max_year,["Any", "Total població ocupada", "Ocupació del sector de la construcció","Atur registrat del sector de la construcció", "Afiliats del sector de la construcció"])
@@ -737,7 +737,7 @@ if selected == "Catalunya":
             st.subheader("COSTOS DE CONSTRUCCIÓ PER TIPOLOGIA EDIFICATÒRIA")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2013
-            max_year=datetime.now().year
+            max_year=datetime.now().year-1
             table_catalunya_q = tidy_Catalunya(DT_terr, ["Fecha", "Costos_edificimitjaneres", "Costos_Unifamiliar2plantes", "Costos_nauind", "Costos_edificioficines"],  f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Edifici renda normal entre mitjaneres", "Unifamiliar de dos plantes entre mitjaneres", "Nau industrial", "Edifici d’oficines entre mitjaneres"])
             table_catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","Costos_edificimitjaneres", "Costos_Unifamiliar2plantes", "Costos_nauind", "Costos_edificioficines"], min_year, max_year,["Any", "Edifici renda normal entre mitjaneres", "Unifamiliar de dos plantes entre mitjaneres", "Nau industrial", "Edifici d’oficines entre mitjaneres"])
             table_catalunya_q = table_catalunya_q.dropna(axis=0)
@@ -776,7 +776,7 @@ if selected == "Catalunya":
             st.subheader("CONSUM DE CIMENT")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2012
-            max_year=datetime.now().year
+            max_year=datetime.now().year-1
             table_catalunya_m = tidy_Catalunya_m(DT_monthly, ["Fecha"] + ["cons_ciment_Catalunya"], f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Consum de ciment"])
             table_catalunya_q = tidy_Catalunya(DT_terr, ["Fecha","cons_ciment_Catalunya"],  f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Consum de ciment"])
             table_catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","cons_ciment_Catalunya"], min_year, max_year,["Any", "Consum de ciment"])
@@ -802,7 +802,7 @@ if selected == "Catalunya":
             st.subheader("IMPORT I NOMBRE D'HIPOTEQUES INSCRITES EN ELS REGISTRES DE PROPIETAT")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2008
-            max_year=datetime.now().year
+            max_year=datetime.now().year-1
             table_catalunya_m = tidy_Catalunya_mensual(DT_monthly, ["Fecha", "hipon_Catalunya", "hipoimp_Catalunya"], f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data","Nombre d'hipoteques", "Import d'hipoteques"])
             table_catalunya_m = table_catalunya_m[["Data","Nombre d'hipoteques", "Import d'hipoteques"]].rename(columns={"Data":"Fecha"})
             table_catalunya_q = tidy_Catalunya(DT_terr, ["Fecha", "hipon_Catalunya", "hipoimp_Catalunya"],  f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Nombre d'hipoteques", "Import d'hipoteques"])
@@ -847,8 +847,8 @@ if selected == "Catalunya":
         if selected_type=="Venda":
             index_names = ["Producció", "Compravendes", "Preus", "Superfície"]
             selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", index_names)
-            max_year=datetime.now().year
-            available_years = list(range(2018, datetime.now().year + 1))
+            max_year=datetime.now().year-1
+            available_years = list(range(2018, datetime.now().year))
             selected_year_n = st.sidebar.selectbox("****Selecciona un any:****", available_years, available_years.index(2023))
             if selected_index=="Producció":
                 min_year=2008
@@ -1033,8 +1033,8 @@ if selected == "Catalunya":
         if selected_type=="Lloguer":
             st.subheader("MERCAT DE LLOGUER")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
-            max_year=datetime.now().year
-            available_years = list(range(2018, datetime.now().year + 1))
+            max_year=datetime.now().year-1
+            available_years = list(range(2018, datetime.now().year))
             selected_year_n = st.sidebar.selectbox("****Selecciona un any:****", available_years, available_years.index(2023))
             min_year=2014
             table_Catalunya = tidy_Catalunya(DT_terr, ["Fecha", "trvivalq_Catalunya", "pmvivalq_Catalunya"], f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
@@ -1074,8 +1074,8 @@ if selected == "Províncies i àmbits":
             selected_geo = st.sidebar.selectbox('**Selecciona un àmbit territorial:**', ambit_names, index= ambit_names.index("Metropolità"))
             index_indicator = ["Producció", "Compravendes", "Preus", "Superfície"]
             selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", index_indicator)
-            max_year=datetime.now().year
-            available_years = list(range(2018, datetime.now().year + 1))
+            max_year=datetime.now().year-1
+            available_years = list(range(2018, datetime.now().year))
             selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(2023))
             if selected_index=="Producció":
                 min_year=2008
@@ -1214,9 +1214,9 @@ if selected == "Províncies i àmbits":
             selected_geo = st.sidebar.selectbox('**Selecciona una província:**', prov_names, index= prov_names.index("Barcelona"))
             index_indicator = ["Producció", "Compravendes", "Preus", "Superfície"]
             selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", index_indicator)
-            max_year=datetime.now().year
-            available_years = list(range(2018, datetime.now().year + 1))
-            selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(2022))
+            max_year=datetime.now().year-1
+            available_years = list(range(2018, datetime.now().year))
+            selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(2023))
             if selected_index=="Producció":
                 min_year=2008
                 st.subheader(f"PRODUCCIÓ D'HABITATGES A {selected_geo.upper()}")
@@ -1373,8 +1373,8 @@ if selected == "Províncies i àmbits":
         if selected_option=="Àmbits territorials":
             selected_geo = st.sidebar.selectbox('**Selecciona un àmbit territorial:**', ambit_names, index= ambit_names.index("Metropolità"))
             min_year=2014
-            max_year=datetime.now().year
-            available_years = list(range(2018, datetime.now().year + 1))
+            max_year=datetime.now().year-1
+            available_years = list(range(2018, datetime.now().year))
             selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(2023))
             st.subheader(f"MERCAT DE LLOGUER A L'ÀMBIT: {selected_geo.upper()}")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
@@ -1405,8 +1405,8 @@ if selected == "Províncies i àmbits":
         if selected_option=="Províncies":
             selected_geo = st.sidebar.selectbox('**Selecciona una província:**', prov_names, index= prov_names.index("Barcelona"))
             min_year=2014
-            max_year=datetime.now().year
-            available_years = list(range(2018, datetime.now().year + 1))
+            max_year=datetime.now().year-1
+            available_years = list(range(2018, datetime.now().year))
             selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(2023))
             st.subheader(f"MERCAT DE LLOGUER A {selected_geo.upper()}")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
@@ -1442,8 +1442,8 @@ if selected=="Comarques":
         selected_com = st.sidebar.selectbox("**Selecciona una comarca:**", maestro_mun["Comarca"].unique(), index= maestro_mun["Comarca"].unique().tolist().index("Barcelonès"))
         index_names = ["Producció", "Compravendes", "Preus", "Superfície"]
         selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", index_names)
-        max_year=datetime.now().year
-        available_years = list(range(2018, datetime.now().year + 1))
+        max_year=datetime.now().year-1
+        available_years = list(range(2018, datetime.now().year))
         selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(2023))
         if selected_index=="Producció":
             min_year=2008
@@ -1611,10 +1611,10 @@ if selected=="Comarques":
     if selected_type=="Lloguer":
         ambit_names = ["Alt Pirineu i Aran","Camp de Tarragona","Comarques centrals","Comarques gironines","Metropolità","Penedès","Ponent","Terres de l'Ebre"]
         selected_com = st.sidebar.selectbox("**Selecciona una comarca:**", maestro_mun["Comarca"].unique(), index= maestro_mun["Comarca"].unique().tolist().index("Barcelonès"))
-        available_years = list(range(2018, datetime.now().year + 1))
+        available_years = list(range(2018, datetime.now().year))
         selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(2023))
         min_year=2014
-        max_year=datetime.now().year
+        max_year=datetime.now().year-1
         st.subheader(f"MERCAT DE LLOGUER A LA COMARCA: {selected_com.upper()}")
         st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
         table_province = tidy_Catalunya(DT_terr, ["Fecha"] + concatenate_lists(["trvivalq_", "pmvivalq_"], selected_com), f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
@@ -1648,8 +1648,8 @@ if selected=="Municipis":
         selected_mun = st.sidebar.selectbox("**Selecciona un municipi:**", maestro_mun[maestro_mun["ADD"]=="SI"]["Municipi"].unique(), index= maestro_mun[maestro_mun["ADD"]=="SI"]["Municipi"].tolist().index("Barcelona"))
         index_names = ["Producció", "Compravendes", "Preus", "Superfície"]
         selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", index_names)
-        max_year=datetime.now().year
-        available_years = list(range(2018, datetime.now().year + 1))
+        max_year=datetime.now().year-1
+        available_years = list(range(2018, datetime.now().year))
         selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(2023))
         if selected_index=="Producció":
             min_year=2008
@@ -1835,8 +1835,8 @@ if selected=="Municipis":
                 st.plotly_chart(bar_plotly(table_mun_y, table_mun.columns.tolist(), "Superfície mitjana per tipologia d'habitatge", "m\u00b2 útil", 2005), use_container_width=True, responsive=True)
     if selected_type=="Lloguer":
         selected_mun = st.sidebar.selectbox("**Selecciona un municipi:**", maestro_mun["Municipi"].unique(), index= maestro_mun["Municipi"].tolist().index("Barcelona"))
-        max_year=datetime.now().year
-        available_years = list(range(2018, datetime.now().year + 1))
+        max_year=datetime.now().year-1
+        available_years = list(range(2018, datetime.now().year))
         selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(2023))
         min_year=2014
         st.subheader(f"MERCAT DE LLOGUER A {selected_mun.upper()}")
@@ -1879,8 +1879,8 @@ if selected=="Districtes de Barcelona":
         selected_dis = st.sidebar.selectbox("**Selecciona un districte de Barcelona:**", maestro_dis["Districte"].unique())
         index_names = ["Producció", "Compravendes", "Preus", "Superfície"]
         selected_index = st.sidebar.selectbox("**Selecciona un indicador**", index_names)
-        max_year=datetime.now().year
-        available_years = list(range(2018, datetime.now().year + 1))
+        max_year=datetime.now().year-1
+        available_years = list(range(2018, datetime.now().year))
         selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(2023))
         if selected_index=="Producció":
             min_year=2011
@@ -2031,10 +2031,10 @@ if selected=="Districtes de Barcelona":
         selected_dis = st.sidebar.selectbox("**Selecciona un districte de Barcelona:**", maestro_dis["Districte"].unique())
         st.subheader(f"MERCAT DE LLOGUER A {selected_dis.upper()}")
         st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
-        available_years = list(range(2018, datetime.now().year + 1))
+        available_years = list(range(2018, datetime.now().year))
         selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(2023))
         min_year=2014
-        max_year=datetime.now().year
+        max_year=datetime.now().year-1
         table_dis = tidy_Catalunya(DT_dis, ["Fecha"] + concatenate_lists(["trvivalq_", "pmvivalq_"], selected_dis), f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
         table_dis_y = tidy_Catalunya_anual(DT_dis_y, ["Fecha"] + concatenate_lists(["trvivalq_", "pmvivalq_"], selected_dis), min_year, max_year,["Any", "Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
         left_col, right_col = st.columns((1,1))
