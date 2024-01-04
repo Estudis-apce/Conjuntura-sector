@@ -111,6 +111,7 @@ def import_data(trim_limit):
 DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis = import_data("2023-10-01")
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def tidy_Catalunya_m(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output):
     output_data = data_ori[["Fecha"] + columns_sel][(data_ori["Fecha"]>=fecha_ini) & (data_ori["Fecha"]<=fecha_fin)]
     output_data.columns = ["Fecha"] + columns_output
@@ -120,6 +121,7 @@ def tidy_Catalunya_m(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output
     return(output_data.drop(["Data", "Month"], axis=1))
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def tidy_Catalunya(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output):
     output_data = data_ori[["Trimestre"] + columns_sel][(data_ori["Fecha"]>=fecha_ini) & (data_ori["Fecha"]<=fecha_fin)]
     output_data.columns = ["Trimestre"] + columns_output
@@ -127,6 +129,7 @@ def tidy_Catalunya(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output):
     return(output_data.set_index("Trimestre").drop("Data", axis=1))
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def tidy_Catalunya_anual(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output):
     output_data = data_ori[columns_sel][(data_ori["Fecha"]>=fecha_ini) & (data_ori["Fecha"]<=fecha_fin)]
     output_data.columns = columns_output
@@ -134,6 +137,7 @@ def tidy_Catalunya_anual(data_ori, columns_sel, fecha_ini, fecha_fin, columns_ou
     return(output_data.set_index("Any"))
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def tidy_Catalunya_mensual(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output):
     output_data = data_ori[["Fecha"] + columns_sel][(data_ori["Fecha"]>=fecha_ini) & (data_ori["Fecha"]<=fecha_fin)]
     output_data.columns = ["Fecha"] + columns_output
@@ -141,6 +145,7 @@ def tidy_Catalunya_mensual(data_ori, columns_sel, fecha_ini, fecha_fin, columns_
     return(output_data.set_index("Fecha"))
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def tidy_present(data_ori, columns_sel, year):
     output_data = data_ori[data_ori[columns_sel]!=0][["Trimestre"] + [columns_sel]].dropna()
     output_data["Trimestre_aux"] = output_data["Trimestre"].str[-1]
@@ -153,6 +158,7 @@ def tidy_present(data_ori, columns_sel, year):
     return(output_data.values[0][0])
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def tidy_present_monthly(data_ori, columns_sel, year):
     output_data = data_ori[["Fecha"] + [columns_sel]]
     output_data["Any"] = output_data["Fecha"].dt.year
@@ -162,6 +168,7 @@ def tidy_present_monthly(data_ori, columns_sel, year):
     return(output_data.values[0][0])
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def tidy_present_monthly_aux(data_ori, columns_sel, year):
     output_data = data_ori[["Fecha"] + columns_sel].dropna(axis=0)
     output_data["month_aux"] = output_data["Fecha"].dt.month
@@ -173,6 +180,7 @@ def tidy_present_monthly_aux(data_ori, columns_sel, year):
     return(output_data.values[0][0])
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def tidy_present_monthly_diff(data_ori, columns_sel, year):
     output_data = data_ori[["Fecha"] + columns_sel].dropna(axis=0)
     output_data["month_aux"] = output_data["Fecha"].dt.month
@@ -184,6 +192,7 @@ def tidy_present_monthly_diff(data_ori, columns_sel, year):
     return(output_data.values[0][0])
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def indicator_year(df, df_aux, year, variable, tipus, frequency=None):
     if (year==str(datetime.now().year-1) and (frequency=="month") and ((tipus=="var") or (tipus=="diff"))):
         return(round(tidy_present_monthly(df_aux, variable, year),2))
@@ -206,6 +215,7 @@ def indicator_year(df, df_aux, year, variable, tipus, frequency=None):
         return(round(df.values[0],2))
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def concatenate_lists(list1, list2):
     result_list = []
     for i in list1:
@@ -224,6 +234,7 @@ def filedownload(df, filename):
     return href
 
 #@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def line_plotly(table_n, selection_n, title_main, title_y, title_x="Trimestre", replace_0=False):
     plot_cat = table_n[selection_n]
     if replace_0==True:
@@ -251,6 +262,7 @@ def line_plotly(table_n, selection_n, title_main, title_y, title_x="Trimestre", 
     return fig
 
 #@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def bar_plotly(table_n, selection_n, title_main, title_y, year_ini, year_fin=datetime.now().year-1):
     table_n = table_n.reset_index()
     table_n["Any"] = table_n["Any"].astype(int)
@@ -276,6 +288,7 @@ def bar_plotly(table_n, selection_n, title_main, title_y, year_ini, year_fin=dat
     fig = go.Figure(data=traces, layout=layout)
     return fig
 #@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def stacked_bar_plotly(table_n, selection_n, title_main, title_y, year_ini, year_fin=datetime.now().year-1):
     table_n = table_n.reset_index()
     table_n["Any"] = table_n["Any"].astype(int)
@@ -305,6 +318,7 @@ def stacked_bar_plotly(table_n, selection_n, title_main, title_y, year_ini, year
     fig = go.Figure(data=traces, layout=layout)
     return fig
 #@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def area_plotly(table_n, selection_n, title_main, title_y, trim):
     plot_cat = table_n[table_n.index>=trim][selection_n]
     fig = px.area(plot_cat, x=plot_cat.index, y=plot_cat.columns, title=title_main)
@@ -321,6 +335,7 @@ def area_plotly(table_n, selection_n, title_main, title_y, trim):
     return fig
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def table_monthly(data_ori, year_ini, rounded=True):
     data_ori = data_ori.reset_index()
     month_mapping_catalan = {
