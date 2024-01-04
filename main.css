@@ -1,14 +1,13 @@
-[data-testid="stSidebar"][aria-expanded="true"]{
+/* [data-testid="stSidebar"][aria-expanded="true"]{
   min-width: 17vw;
   max-width: 17vw;
-}
+} */
 [data-testid= "stAppViewContainer"]{
   background-color: #fcefdc;
 }
 [data-testid=stSidebar] {
   background-color: #fac678;
 }
-
 
 body {
   text-align: center;

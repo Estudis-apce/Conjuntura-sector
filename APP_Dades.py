@@ -22,10 +22,10 @@ path = ""
 
 st.set_page_config(
     page_title="Conjuntura de sector",
-    # page_icon="""data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAA1VBMVEVHcEylpKR6eHaBgH9GREGenJxRT06op6evra2Qj49kYWCbmpqdnJyWlJS+vb1CPzyurKyHhYWMiYl7eXgOCgiPjY10cnJZV1WEgoKCgYB9fXt
-    # /fHyzsrGUk5OTkZGlo6ONioqko6OLioq7urqysbGdnJuurazCwcHLysp+fHx9fHuDgYGJh4Y4NTJcWVl9e3uqqalcWlgpJyacm5q7urrJyMizsrLS0tKIhoaMioqZmJiTkpKgn5+Bf36WlZWdnJuFg4O4t7e2tbXFxMR3dXTg39/T0dLqKxxpAAAAOHRSTlMA/WCvR6hq/
-    # v7+OD3U9/1Fpw+SlxynxXWZ8yLp+IDo2ufp9s3oUPII+jyiwdZ1vczEli7waWKEmIInp28AAADMSURBVBiVNczXcsIwEAVQyQZLMrYhQOjV1DRKAomKJRkZ+P9PYpCcfbgze+buAgDA5nf1zL8TcLNamssiPG/
-    # vt2XbwmA8Rykqton/XVZAbYKTSxzVyvVlPMc4no2KYhFaePvU8fDHmGT93i47Xh8ijPrB/0lTcA3lcGQO7otPmZJfgwhhoytPeKX5LqxOPA9i7oDlwYwJ3p0iYaEqWDdlRB2nkDjgJPA7nX0QaVq3kPGPZq/V6qUqt9BAmVaCUcqEdACzTBFCpcyvFfAAxgMYYVy1sTwAAAAASUVORK5CYII=""",
+    page_icon="""data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAA1VBMVEVHcEylpKR6eHaBgH9GREGenJxRT06op6evra2Qj49kYWCbmpqdnJyWlJS+vb1CPzyurKyHhYWMiYl7eXgOCgiPjY10cnJZV1WEgoKCgYB9fXt
+    /fHyzsrGUk5OTkZGlo6ONioqko6OLioq7urqysbGdnJuurazCwcHLysp+fHx9fHuDgYGJh4Y4NTJcWVl9e3uqqalcWlgpJyacm5q7urrJyMizsrLS0tKIhoaMioqZmJiTkpKgn5+Bf36WlZWdnJuFg4O4t7e2tbXFxMR3dXTg39/T0dLqKxxpAAAAOHRSTlMA/WCvR6hq/
+    v7+OD3U9/1Fpw+SlxynxXWZ8yLp+IDo2ufp9s3oUPII+jyiwdZ1vczEli7waWKEmIInp28AAADMSURBVBiVNczXcsIwEAVQyQZLMrYhQOjV1DRKAomKJRkZ+P9PYpCcfbgze+buAgDA5nf1zL8TcLNamssiPG/
+    vt2XbwmA8Rykqton/XVZAbYKTSxzVyvVlPMc4no2KYhFaePvU8fDHmGT93i47Xh8ijPrB/0lTcA3lcGQO7otPmZJfgwhhoytPeKX5LqxOPA9i7oDlwYwJ3p0iYaEqWDdlRB2nkDjgJPA7nX0QaVq3kPGPZq/V6qUqt9BAmVaCUcqEdACzTBFCpcyvFfAAxgMYYVy1sTwAAAAASUVORK5CYII=""",
     layout="wide"
 )
 def load_css_file(css_file_path):
@@ -46,27 +46,29 @@ with right_col:
 
 
 # Creating a dropdown menu with options and icons, and customizing the appearance of the menu using CSS styles.
-selected = option_menu(
-    menu_title=None,  # required
-    options=["Espanya","Catalunya","Províncies i àmbits", "Comarques", "Municipis", "Districtes de Barcelona"],  # Dropdown menu
-    icons=[None, None, "map", "map","house-fill", "house-fill"],  # Icons for dropdown menu
-    menu_icon="cast",  # optional
-    default_index=0,  # optional
-    orientation="horizontal",
-    styles={
-        "container": {"padding-right": "0px important!", "background-color": "#fcefdc", "margin-right":"0px", "margin-left":"0px"},
-        "icon": {"color": "#bf6002", "font-size": "17px"},
-        "nav-link": {
-            "font-size": "17px",
-            "text-align": "center",
-            "font-weight": "bold",
-            "color":"#363534",
-            "padding": "5px",
-            "--hover-color": "#fcefdc",
-            "background-color": "#fcefdc",
-            "overflow":"hidden"},
-        "nav-link-selected": {"background-color": "#de7207"}
-        })
+left_col, right_col, margin_right = st.columns((0.15, 1, 0.15))
+with right_col:
+    selected = option_menu(
+        menu_title=None,  # required
+        options=["Espanya","Catalunya","Províncies i àmbits", "Comarques", "Municipis", "Districtes de Barcelona"],  # Dropdown menu
+        icons=[None, None, "map", "map","house-fill", "house-fill"],  # Icons for dropdown menu
+        menu_icon="cast",  # optional
+        default_index=0,  # optional
+        orientation="horizontal",
+        styles={
+            "container": {"padding": "0px important!", "background-color": "#fcefdc", "align":"center", "overflow":"hidden"},
+            "icon": {"color": "#bf6002", "font-size": "17px"},
+            "nav-link": {
+                "font-size": "17px",
+                "text-align": "center",
+                "font-weight": "bold",
+                "color":"#363534",
+                "padding": "5px",
+                "--hover-color": "#fcefdc",
+                "background-color": "#fcefdc",
+                "overflow":"hidden"},
+            "nav-link-selected": {"background-color": "#de7207"}
+            })
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def import_data(trim_limit):
