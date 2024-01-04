@@ -16,7 +16,7 @@ import yaml
 from yaml.loader import SafeLoader
 from datetime import datetime
 import plotly.graph_objs as go
-
+import json
 
 path = ""
 
@@ -70,41 +70,39 @@ selected = option_menu(
   
 @st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def import_data(trim_limit):
-    DT_monthly = pd.read_excel('DT_simple.xlsx', sheet_name= 'ind_m')
-    DT_monthly = DT_monthly[DT_monthly["Fecha"]<=trim_limit]
+    with open('DT_simple.json', 'r') as outfile:
+        list_of_df = [pd.DataFrame.from_dict(item) for item in json.loads(outfile.read())]
+    DT_terr= list_of_df[0].copy()
+    DT_mun= list_of_df[1].copy()
+    DT_mun_aux= list_of_df[2].copy()
+    DT_mun_aux2= list_of_df[3].copy()
+    DT_mun_aux3= list_of_df[4].copy()
+    DT_dis= list_of_df[5].copy()
+    DT_terr_y= list_of_df[6].copy()
+    DT_mun_y= list_of_df[7].copy()
+    DT_mun_y_aux= list_of_df[8].copy()
+    DT_mun_y_aux2= list_of_df[9].copy()
+    DT_mun_y_aux3= list_of_df[10].copy()
+    DT_dis_y= list_of_df[11].copy()
+    DT_monthly= list_of_df[12].copy()
+    DT_monthly["Fecha"] = DT_monthly["Fecha"].astype("datetime64[ns]")
+    maestro_mun= list_of_df[13].copy()
+    maestro_dis= list_of_df[14].copy()
 
-    DT_terr = pd.read_excel('DT_simple.xlsx', sheet_name= 'terr_q')
+
+    DT_monthly = DT_monthly[DT_monthly["Fecha"]<=trim_limit]
     DT_terr = DT_terr[DT_terr["Fecha"]<=trim_limit]
-    DT_mun = pd.read_excel('DT_simple.xlsx', sheet_name= 'mun_q')
     DT_mun = DT_mun[DT_mun["Fecha"]<=trim_limit]
-    DT_mun_aux = pd.read_excel('DT_simple.xlsx', sheet_name= 'mun_q_aux')
     DT_mun_aux = DT_mun_aux[DT_mun_aux["Fecha"]<=trim_limit]
-    DT_mun_aux2 = pd.read_excel('DT_simple.xlsx', sheet_name= 'mun_q_aux2')
     DT_mun_aux2 = DT_mun_aux2[DT_mun_aux2["Fecha"]<=trim_limit]
-    DT_mun_aux3 = pd.read_excel('DT_simple.xlsx', sheet_name= 'mun_q_aux3')
     DT_mun_aux3 = DT_mun_aux3[DT_mun_aux3["Fecha"]<=trim_limit]
     DT_mun_pre = pd.merge(DT_mun, DT_mun_aux, how="left", on=["Trimestre","Fecha"])
     DT_mun_pre2 = pd.merge(DT_mun_pre, DT_mun_aux2, how="left", on=["Trimestre","Fecha"])
     DT_mun_def = pd.merge(DT_mun_pre2, DT_mun_aux3, how="left", on=["Trimestre","Fecha"])
-
-    DT_dis = pd.read_excel('DT_simple.xlsx', sheet_name= 'dis_q')
     DT_dis = DT_dis[DT_dis["Fecha"]<=trim_limit]
-
-    DT_terr_y = pd.read_excel('DT_simple.xlsx', sheet_name= 'terr_y')
-
-    DT_mun_y = pd.read_excel('DT_simple.xlsx', sheet_name= 'mun_y')
-    DT_mun_y_aux = pd.read_excel('DT_simple.xlsx', sheet_name= 'mun_y_aux')
-    DT_mun_y_aux2 = pd.read_excel('DT_simple.xlsx', sheet_name= 'mun_y_aux2')
-    DT_mun_y_aux3 = pd.read_excel('DT_simple.xlsx', sheet_name= 'mun_y_aux3')
-
     DT_mun_y_pre = pd.merge(DT_mun_y, DT_mun_y_aux, how="left", on="Fecha")
     DT_mun_y_pre2 = pd.merge(DT_mun_y_pre, DT_mun_y_aux2, how="left", on="Fecha")
-    DT_mun_y_def = pd.merge(DT_mun_y_pre2, DT_mun_y_aux3, how="left", on="Fecha")
-
-    DT_dis_y = pd.read_excel('DT_simple.xlsx', sheet_name= 'dis_y')
-    
-    maestro_mun = pd.read_excel("Maestro_MUN_COM_PROV.xlsx", sheet_name="Maestro")
-    maestro_dis = pd.read_excel("Maestro_dis_barris.xlsx")
+    DT_mun_y_def = pd.merge(DT_mun_y_pre2, DT_mun_y_aux3, how="left", on="Fecha")    
 
     return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis])
 
