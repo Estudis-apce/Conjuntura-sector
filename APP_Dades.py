@@ -71,6 +71,7 @@ with right_col:
             })
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+@st.cache_resource
 def import_data(trim_limit):
     with open('DT_simple.json', 'r') as outfile:
         list_of_df = [pd.DataFrame.from_dict(item) for item in json.loads(outfile.read())]
