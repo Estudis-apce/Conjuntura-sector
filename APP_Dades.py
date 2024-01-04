@@ -33,16 +33,16 @@ def load_css_file(css_file_path):
         return st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 load_css_file(path + "main.css")
 
-left_col, right_col, margin_right = st.columns((0.25, 1, 0.25))
-with right_col:
-    with open(path + "APCE_mod.png", "rb") as f:
-        data_uri = base64.b64encode(f.read()).decode("utf-8")
-    markdown = f"""
-    <div class="image">
-    <img src="data:image/png;base64, {data_uri}" alt="image" />
-    </div>
-    """
-    st.markdown(markdown, unsafe_allow_html=True)
+# left_col, right_col, margin_right = st.columns((0.25, 1, 0.25))
+# with right_col:
+#     with open(path + "APCE_mod.png", "rb") as f:
+#         data_uri = base64.b64encode(f.read()).decode("utf-8")
+#     markdown = f"""
+#     <div class="image">
+#     <img src="data:image/png;base64, {data_uri}" alt="image" />
+#     </div>
+#     """
+#     st.markdown(markdown, unsafe_allow_html=True)
 
 
 # Creating a dropdown menu with options and icons, and customizing the appearance of the menu using CSS styles.
