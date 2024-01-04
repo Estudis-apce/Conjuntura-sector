@@ -22,10 +22,10 @@ path = ""
 
 st.set_page_config(
     page_title="Conjuntura de sector",
-    page_icon="""data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAA1VBMVEVHcEylpKR6eHaBgH9GREGenJxRT06op6evra2Qj49kYWCbmpqdnJyWlJS+vb1CPzyurKyHhYWMiYl7eXgOCgiPjY10cnJZV1WEgoKCgYB9fXt
-    /fHyzsrGUk5OTkZGlo6ONioqko6OLioq7urqysbGdnJuurazCwcHLysp+fHx9fHuDgYGJh4Y4NTJcWVl9e3uqqalcWlgpJyacm5q7urrJyMizsrLS0tKIhoaMioqZmJiTkpKgn5+Bf36WlZWdnJuFg4O4t7e2tbXFxMR3dXTg39/T0dLqKxxpAAAAOHRSTlMA/WCvR6hq/
-    v7+OD3U9/1Fpw+SlxynxXWZ8yLp+IDo2ufp9s3oUPII+jyiwdZ1vczEli7waWKEmIInp28AAADMSURBVBiVNczXcsIwEAVQyQZLMrYhQOjV1DRKAomKJRkZ+P9PYpCcfbgze+buAgDA5nf1zL8TcLNamssiPG/
-    vt2XbwmA8Rykqton/XVZAbYKTSxzVyvVlPMc4no2KYhFaePvU8fDHmGT93i47Xh8ijPrB/0lTcA3lcGQO7otPmZJfgwhhoytPeKX5LqxOPA9i7oDlwYwJ3p0iYaEqWDdlRB2nkDjgJPA7nX0QaVq3kPGPZq/V6qUqt9BAmVaCUcqEdACzTBFCpcyvFfAAxgMYYVy1sTwAAAAASUVORK5CYII=""",
+    # page_icon="""data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAA1VBMVEVHcEylpKR6eHaBgH9GREGenJxRT06op6evra2Qj49kYWCbmpqdnJyWlJS+vb1CPzyurKyHhYWMiYl7eXgOCgiPjY10cnJZV1WEgoKCgYB9fXt
+    # /fHyzsrGUk5OTkZGlo6ONioqko6OLioq7urqysbGdnJuurazCwcHLysp+fHx9fHuDgYGJh4Y4NTJcWVl9e3uqqalcWlgpJyacm5q7urrJyMizsrLS0tKIhoaMioqZmJiTkpKgn5+Bf36WlZWdnJuFg4O4t7e2tbXFxMR3dXTg39/T0dLqKxxpAAAAOHRSTlMA/WCvR6hq/
+    # v7+OD3U9/1Fpw+SlxynxXWZ8yLp+IDo2ufp9s3oUPII+jyiwdZ1vczEli7waWKEmIInp28AAADMSURBVBiVNczXcsIwEAVQyQZLMrYhQOjV1DRKAomKJRkZ+P9PYpCcfbgze+buAgDA5nf1zL8TcLNamssiPG/
+    # vt2XbwmA8Rykqton/XVZAbYKTSxzVyvVlPMc4no2KYhFaePvU8fDHmGT93i47Xh8ijPrB/0lTcA3lcGQO7otPmZJfgwhhoytPeKX5LqxOPA9i7oDlwYwJ3p0iYaEqWDdlRB2nkDjgJPA7nX0QaVq3kPGPZq/V6qUqt9BAmVaCUcqEdACzTBFCpcyvFfAAxgMYYVy1sTwAAAAASUVORK5CYII=""",
     layout="wide"
 )
 def load_css_file(css_file_path):
@@ -45,30 +45,30 @@ with right_col:
     st.markdown(markdown, unsafe_allow_html=True)
 
 
-
 # Creating a dropdown menu with options and icons, and customizing the appearance of the menu using CSS styles.
 selected = option_menu(
     menu_title=None,  # required
-    options=["Espanya","Catalunya","Províncies i àmbits", "Comarques", "Municipis", "Districtes de Barcelona", "Contacte"],  # Dropdown menu
-    icons=[None, None, "map", "map","house-fill", "house-fill", "envelope"],  # Icons for dropdown menu
+    options=["Espanya","Catalunya","Províncies i àmbits", "Comarques", "Municipis", "Districtes de Barcelona"],  # Dropdown menu
+    icons=[None, None, "map", "map","house-fill", "house-fill"],  # Icons for dropdown menu
     menu_icon="cast",  # optional
     default_index=0,  # optional
     orientation="horizontal",
     styles={
-        "container": {"padding": "0!important", "background-color": "#fcefdc"},
+        "container": {"padding-right": "0px important!", "background-color": "#fcefdc", "margin-right":"0px", "margin-left":"0px"},
         "icon": {"color": "#bf6002", "font-size": "17px"},
         "nav-link": {
             "font-size": "17px",
             "text-align": "center",
             "font-weight": "bold",
             "color":"#363534",
-            "margin": "20px",
+            "padding": "5px",
             "--hover-color": "#fcefdc",
-            "background-color": "#fcefdc"},
-        "nav-link-selected": {"background-color": "#de7207"},
+            "background-color": "#fcefdc",
+            "overflow":"hidden"},
+        "nav-link-selected": {"background-color": "#de7207"}
         })
-  
-@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+
+##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def import_data(trim_limit):
     with open('DT_simple.json', 'r') as outfile:
         list_of_df = [pd.DataFrame.from_dict(item) for item in json.loads(outfile.read())]
@@ -108,7 +108,7 @@ def import_data(trim_limit):
 
 DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis = import_data("2023-10-01")
 
-@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def tidy_Catalunya_m(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output):
     output_data = data_ori[["Fecha"] + columns_sel][(data_ori["Fecha"]>=fecha_ini) & (data_ori["Fecha"]<=fecha_fin)]
     output_data.columns = ["Fecha"] + columns_output
@@ -117,28 +117,28 @@ def tidy_Catalunya_m(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output
     output_data = output_data[(output_data["Month"]<=output_data['Month'].iloc[-1])]
     return(output_data.drop(["Data", "Month"], axis=1))
 
-@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def tidy_Catalunya(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output):
     output_data = data_ori[["Trimestre"] + columns_sel][(data_ori["Fecha"]>=fecha_ini) & (data_ori["Fecha"]<=fecha_fin)]
     output_data.columns = ["Trimestre"] + columns_output
 
     return(output_data.set_index("Trimestre").drop("Data", axis=1))
 
-@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def tidy_Catalunya_anual(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output):
     output_data = data_ori[columns_sel][(data_ori["Fecha"]>=fecha_ini) & (data_ori["Fecha"]<=fecha_fin)]
     output_data.columns = columns_output
     output_data["Any"] = output_data["Any"].astype(str)
     return(output_data.set_index("Any"))
 
-@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def tidy_Catalunya_mensual(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output):
     output_data = data_ori[["Fecha"] + columns_sel][(data_ori["Fecha"]>=fecha_ini) & (data_ori["Fecha"]<=fecha_fin)]
     output_data.columns = ["Fecha"] + columns_output
     output_data["Fecha"] = output_data["Fecha"].astype(str)
     return(output_data.set_index("Fecha"))
 
-@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def tidy_present(data_ori, columns_sel, year):
     output_data = data_ori[data_ori[columns_sel]!=0][["Trimestre"] + [columns_sel]].dropna()
     output_data["Trimestre_aux"] = output_data["Trimestre"].str[-1]
@@ -150,7 +150,7 @@ def tidy_present(data_ori, columns_sel, year):
     output_data = output_data.set_index("Any")
     return(output_data.values[0][0])
 
-@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def tidy_present_monthly(data_ori, columns_sel, year):
     output_data = data_ori[["Fecha"] + [columns_sel]]
     output_data["Any"] = output_data["Fecha"].dt.year
@@ -159,7 +159,7 @@ def tidy_present_monthly(data_ori, columns_sel, year):
     output_data = output_data[output_data["Any"]==int(year)].set_index("Any")
     return(output_data.values[0][0])
 
-@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def tidy_present_monthly_aux(data_ori, columns_sel, year):
     output_data = data_ori[["Fecha"] + columns_sel].dropna(axis=0)
     output_data["month_aux"] = output_data["Fecha"].dt.month
@@ -170,7 +170,7 @@ def tidy_present_monthly_aux(data_ori, columns_sel, year):
     output_data = output_data[output_data["Any"]==int(year)].set_index("Any")
     return(output_data.values[0][0])
 
-@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def tidy_present_monthly_diff(data_ori, columns_sel, year):
     output_data = data_ori[["Fecha"] + columns_sel].dropna(axis=0)
     output_data["month_aux"] = output_data["Fecha"].dt.month
@@ -181,7 +181,7 @@ def tidy_present_monthly_diff(data_ori, columns_sel, year):
     output_data = output_data[output_data["Any"]==int(year)].set_index("Any")
     return(output_data.values[0][0])
 
-@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def indicator_year(df, df_aux, year, variable, tipus, frequency=None):
     if (year==str(datetime.now().year-1) and (frequency=="month") and ((tipus=="var") or (tipus=="diff"))):
         return(round(tidy_present_monthly(df_aux, variable, year),2))
@@ -203,7 +203,7 @@ def indicator_year(df, df_aux, year, variable, tipus, frequency=None):
         df = df[df.index==year]
         return(round(df.values[0],2))
 
-@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def concatenate_lists(list1, list2):
     result_list = []
     for i in list1:
@@ -221,7 +221,7 @@ def filedownload(df, filename):
     <button class="download-button">Descarregar</button></a>"""
     return href
 
-@st.cache_resource
+#@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def line_plotly(table_n, selection_n, title_main, title_y, title_x="Trimestre", replace_0=False):
     plot_cat = table_n[selection_n]
     if replace_0==True:
@@ -241,12 +241,14 @@ def line_plotly(table_n, selection_n, title_main, title_y, title_x="Trimestre", 
         title=dict(text=title_main, font=dict(size=13)),
         xaxis=dict(title=title_x),
         yaxis=dict(title=title_y, tickformat=",d"),
-        legend=dict(x=0, y=1.15, orientation="h")
+        legend=dict(x=0, y=1.15, orientation="h"),
+        paper_bgcolor = "#fcefdc",
+        plot_bgcolor='#fcefdc'
     )
     fig = go.Figure(data=traces, layout=layout)
     return fig
 
-@st.cache_resource
+#@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def bar_plotly(table_n, selection_n, title_main, title_y, year_ini, year_fin=datetime.now().year-1):
     table_n = table_n.reset_index()
     table_n["Any"] = table_n["Any"].astype(int)
@@ -265,11 +267,13 @@ def bar_plotly(table_n, selection_n, title_main, title_y, year_ini, year_fin=dat
         title=dict(text=title_main, font=dict(size=13)),
         xaxis=dict(title="Any"),
         yaxis=dict(title=title_y, tickformat=",d"),
-        legend=dict(x=0, y=1.15, orientation="h")
+        legend=dict(x=0, y=1.15, orientation="h"),
+        paper_bgcolor = "#fcefdc",
+        plot_bgcolor='#fcefdc'
     )
     fig = go.Figure(data=traces, layout=layout)
     return fig
-@st.cache_resource
+#@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def stacked_bar_plotly(table_n, selection_n, title_main, title_y, year_ini, year_fin=datetime.now().year-1):
     table_n = table_n.reset_index()
     table_n["Any"] = table_n["Any"].astype(int)
@@ -291,12 +295,14 @@ def stacked_bar_plotly(table_n, selection_n, title_main, title_y, year_ini, year
         xaxis=dict(title="Any"),
         yaxis=dict(title=title_y, tickformat=",d"),
         legend=dict(x=0, y=1.15, orientation="h"),
-        barmode='stack'
+        barmode='stack',
+        paper_bgcolor = "#fcefdc",
+        plot_bgcolor='#fcefdc'
     )
     
     fig = go.Figure(data=traces, layout=layout)
     return fig
-@st.cache_resource
+#@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def area_plotly(table_n, selection_n, title_main, title_y, trim):
     plot_cat = table_n[table_n.index>=trim][selection_n]
     fig = px.area(plot_cat, x=plot_cat.index, y=plot_cat.columns, title=title_main)
@@ -307,10 +313,12 @@ def area_plotly(table_n, selection_n, title_main, title_y, trim):
     fig.update_layout(
         title=dict(text=title_main, font=dict(size=13), y=0.97),
         legend=dict(x=-0.15, y=1.25, orientation="h"),  # Adjust the x and y values for the legend position
+        paper_bgcolor = "#fcefdc",
+        plot_bgcolor='#fcefdc'
     )
     return fig
 
-@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
+##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 def table_monthly(data_ori, year_ini, rounded=True):
     data_ori = data_ori.reset_index()
     month_mapping_catalan = {
@@ -2055,21 +2063,21 @@ if selected=="Districtes de Barcelona":
             st.plotly_chart(line_plotly(table_dis, ["Nombre de contractes de lloguer"], "Evolució trimestral dels contractes de lloguer", "Nombre de contractes", True), use_container_width=True, responsive=True)
         with right:
             st.plotly_chart(line_plotly(table_dis_y, ["Rendes mitjanes de lloguer"], "Evolució trimestral de les rendes mitjanes de lloguer", "€/mes", True), use_container_width=True, responsive=True)
-if selected=="Contacte":
-    load_css_file(path + "main.css")
-    CONTACT_EMAIL = "estudis@apcecat.cat"
-    st.write("")
-    st.subheader(":mailbox: Contacteu-nos!")
-    contact_form = f"""
-    <form action="https://formsubmit.co/{CONTACT_EMAIL}" method="POST">
-        <input type="hidden" class="Contacte" name="_captcha" value="false">
-        <input type="text" class="Contacte" name="name" placeholder="Nom" required>
-        <input type="email" class="Contacte" name="email" placeholder="Correu electrónic" required>
-        <textarea class="Contacte" name="message" placeholder="La teva consulta aquí"></textarea>
-        <button type="submit" class="button">Enviar ✉</button>
-    </form>
-    """
-    st.markdown(contact_form, unsafe_allow_html=True)
+# if selected=="Contacte":
+#     load_css_file(path + "main.css")
+#     CONTACT_EMAIL = "estudis@apcecat.cat"
+#     st.write("")
+#     st.subheader(":mailbox: Contacteu-nos!")
+#     contact_form = f"""
+#     <form action="https://formsubmit.co/{CONTACT_EMAIL}" method="POST">
+#         <input type="hidden" class="Contacte" name="_captcha" value="false">
+#         <input type="text" class="Contacte" name="name" placeholder="Nom" required>
+#         <input type="email" class="Contacte" name="email" placeholder="Correu electrónic" required>
+#         <textarea class="Contacte" name="message" placeholder="La teva consulta aquí"></textarea>
+#         <button type="submit" class="button">Enviar ✉</button>
+#     </form>
+#     """
+#     st.markdown(contact_form, unsafe_allow_html=True)
 
 
 # min_year, max_year = st.sidebar.slider("**Interval d'anys de la mostra**", value=[min_year, max_year], min_value=min_year, max_value=max_year)
