@@ -72,7 +72,7 @@ with right_col:
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
-def import_data(trim_limit):
+def import_data(trim_limit, month_limit):
     with open('DT_simple.json', 'r') as outfile:
         list_of_df = [pd.DataFrame.from_dict(item) for item in json.loads(outfile.read())]
     DT_terr= list_of_df[0].copy()
@@ -93,7 +93,7 @@ def import_data(trim_limit):
     maestro_dis= list_of_df[14].copy()
 
 
-    DT_monthly = DT_monthly[DT_monthly["Fecha"]<=trim_limit]
+    DT_monthly = DT_monthly[DT_monthly["Fecha"]<=month_limit]
     DT_terr = DT_terr[DT_terr["Fecha"]<=trim_limit]
     DT_mun = DT_mun[DT_mun["Fecha"]<=trim_limit]
     DT_mun_aux = DT_mun_aux[DT_mun_aux["Fecha"]<=trim_limit]
@@ -109,7 +109,7 @@ def import_data(trim_limit):
 
     return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis])
 
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis = import_data("2023-10-01")
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis = import_data("2023-10-01", "2023-12-01")
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
@@ -423,8 +423,8 @@ if selected == "Espanya":
             st.subheader("ÍNDEX DE PREUS AL CONSUM (IPC)")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2002
-            max_year=datetime.now().year-1
-            table_espanya_m = tidy_Catalunya_mensual(DT_monthly, ["Fecha", "IPC_Nacional_x", "IPC_subyacente", "IGC_Nacional"], f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data","IPC (Base 2021)","IPC subjacent", "IGC"])
+            max_year=datetime.now().year
+            table_espanya_m = tidy_Catalunya_mensual(DT_monthly, ["Fecha", "IPC_Nacional_x", "IPC_subyacente", "IGC_Nacional"], f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data","IPC (Base 2021)","IPC subjacent", "IGC"])
             table_espanya_m["Inflació"] = table_espanya_m["IPC (Base 2021)"].pct_change(12).mul(100)
             table_espanya_m["Inflació subjacent"] = round(table_espanya_m["IPC subjacent"].mul(100),1)
             table_espanya_m["Índex de Garantia de Competitivitat (IGC)"] = round(table_espanya_m["IGC"],1)
@@ -670,9 +670,9 @@ if selected == "Espanya":
                 table_esp_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha", "prvivlfom_Nacional", "prvivlnfom_Nacional"], min_year, max_year,["Any", "Preu de l'habitatge lliure", "Preu de l'habitatge lliure nou"])
                 left, right = st.columns((1,1))
                 with left:
-                    st.metric(label=f"""**Preu de l'habitatge lliure** (€/m\u00b2)""", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Preu de l'habitatge lliure", "level")}""")
+                    st.metric(label=f"""**Preu de l'habitatge lliure** (€/m\u00b2)""", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Preu de l'habitatge lliure", "level"):,.0f}""")
                 with right:
-                    st.metric(label=f"""**Preu de l'habitatge lliure nou** (€/m\u00b2)""", value=f"""{round(indicator_year(table_esp_y, table_esp, str(selected_year_n), "Preu de l'habitatge lliure nou", "level"),1)}""")               
+                    st.metric(label=f"""**Preu de l'habitatge lliure nou** (€/m\u00b2)""", value=f"""{round(indicator_year(table_esp_y, table_esp, str(selected_year_n), "Preu de l'habitatge lliure nou", "level"),1):,.0f}""")               
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1056,10 +1056,10 @@ if selected == "Catalunya":
                     st.plotly_chart(bar_plotly(table_Catalunya_y, table_Catalunya.columns.tolist(), "Superfície mitjana per tipologia d'habitatge", "m\u00b2 construïts", 2014), use_container_width=True, responsive=True)   
         if selected_type=="Lloguer":
             st.subheader("MERCAT DE LLOGUER")
-            st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             max_year=datetime.now().year-1
-            available_years = list(range(2018, datetime.now().year))
-            selected_year_n = st.sidebar.selectbox("****Selecciona un any:****", available_years, available_years.index(2023))
+            available_years = list(range(2018, max_year+1))
+            selected_year_n = st.sidebar.selectbox("****Selecciona un any:****", available_years, available_years.index(max_year))
+            st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2014
             table_Catalunya = tidy_Catalunya(DT_terr, ["Fecha", "trvivalq_Catalunya", "pmvivalq_Catalunya"], f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
             table_Catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha", "trvivalq_Catalunya",  "pmvivalq_Catalunya"], min_year, max_year,["Any", "Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
@@ -1524,7 +1524,6 @@ if selected=="Comarques":
             # st.subheader("**DADES ANUALS**")
             st.markdown(table_year(table_com_y, 2008, rounded=False).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_year(table_com_y, 2008, rounded=False), f"{selected_index}_{selected_com}_anual.xlsx"), unsafe_allow_html=True)
-
             left_col, right_col = st.columns((1,1))
             with left_col:
                 st.plotly_chart(line_plotly(table_com[selected_columns_aux], selected_columns_aux, "Oferta d'habitatges", "Indicador d'oferta en nivells"), use_container_width=True, responsive=True)
@@ -1855,7 +1854,6 @@ if selected=="Municipis":
             with left_col:
                 st.plotly_chart(line_plotly(table_mun, table_mun.columns.tolist(), "Superfície mitjana per tipologia d'habitatge", "m\u00b2 útil", True), use_container_width=True, responsive=True)
             with right_col:
-                st.markdown(filedownload(table_mun_y, f"{selected_index}_{selected_mun}_anual.xlsx"), unsafe_allow_html=True)
                 st.plotly_chart(bar_plotly(table_mun_y, table_mun.columns.tolist(), "Superfície mitjana per tipologia d'habitatge", "m\u00b2 útil", 2005), use_container_width=True, responsive=True)
     if selected_type=="Lloguer":
         selected_mun = st.sidebar.selectbox("**Selecciona un municipi:**", maestro_mun["Municipi"].unique(), index= maestro_mun["Municipi"].tolist().index("Barcelona"))
@@ -2054,11 +2052,11 @@ if selected=="Districtes de Barcelona":
     if selected_type=="Lloguer":
         selected_dis = st.sidebar.selectbox("**Selecciona un districte de Barcelona:**", maestro_dis["Districte"].unique())
         st.subheader(f"MERCAT DE LLOGUER A {selected_dis.upper()}")
-        st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
-        available_years = list(range(2018, datetime.now().year))
-        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(2023))
-        min_year=2014
         max_year=datetime.now().year-1
+        available_years = list(range(2018, max_year+1))
+        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(max_year))
+        st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
+        min_year=2014
         table_dis = tidy_Catalunya(DT_dis, ["Fecha"] + concatenate_lists(["trvivalq_", "pmvivalq_"], selected_dis), f"{str(min_year)}-01-01", f"{str(max_year+1)}-01-01",["Data", "Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
         table_dis_y = tidy_Catalunya_anual(DT_dis_y, ["Fecha"] + concatenate_lists(["trvivalq_", "pmvivalq_"], selected_dis), min_year, max_year,["Any", "Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
         left_col, right_col = st.columns((1,1))
@@ -2076,11 +2074,13 @@ if selected=="Districtes de Barcelona":
         # st.subheader("**DADES ANUALS**")
         st.markdown(table_year(table_dis_y, 2014, rounded=True).to_html(), unsafe_allow_html=True)
         st.markdown(filedownload(table_year(table_dis_y, 2014, rounded=True), f"{selected_type}_{selected_dis}_anual.xlsx"), unsafe_allow_html=True)
-        left, right = st.columns((1,1))
-        with left:
-            st.plotly_chart(line_plotly(table_dis, ["Nombre de contractes de lloguer"], "Evolució trimestral dels contractes de lloguer", "Nombre de contractes", True), use_container_width=True, responsive=True)
-        with right:
-            st.plotly_chart(line_plotly(table_dis_y, ["Rendes mitjanes de lloguer"], "Evolució trimestral de les rendes mitjanes de lloguer", "€/mes", True), use_container_width=True, responsive=True)
+        left_col, right_col = st.columns((1,1))
+        with left_col:
+            st.plotly_chart(line_plotly(table_dis, ["Rendes mitjanes de lloguer"], "Evolució trimestral de les rendes mitjanes de lloguer", "€/mes", True), use_container_width=True, responsive=True)
+            st.plotly_chart(line_plotly(table_dis, ["Nombre de contractes de lloguer"], "Evolució trimestral del nombre de contractes de lloguer", "Nombre de contractes"), use_container_width=True, responsive=True)
+        with right_col:
+            st.plotly_chart(bar_plotly(table_dis_y, ["Rendes mitjanes de lloguer"], "Evolució anual de les rendes mitjanes de lloguer", "€/mes", 2005), use_container_width=True, responsive=True)
+            st.plotly_chart(bar_plotly(table_dis_y, ["Nombre de contractes de lloguer"],  "Evolució anual del nombre de contractes de lloguer", "Nombre de contractes", 2005), use_container_width=True, responsive=True)
 # if selected=="Contacte":
 #     load_css_file(path + "main.css")
 #     CONTACT_EMAIL = "estudis@apcecat.cat"
