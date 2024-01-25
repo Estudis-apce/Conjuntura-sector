@@ -44,6 +44,7 @@ load_css_file(path + "main.css")
 #     """
 #     st.markdown(markdown, unsafe_allow_html=True)
 
+st.markdown(f"""<script>document.domain="apcebcn.cat";</script>""", unsafe_allow_html=True)
 
 # Creating a dropdown menu with options and icons, and customizing the appearance of the menu using CSS styles.
 left_col, right_col, margin_right = st.columns((0.15, 1, 0.15))
@@ -114,7 +115,7 @@ def import_data(trim_limit, month_limit):
 
     return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis])
 
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis = import_data("2023-10-01", "2023-12-01")
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis = import_data("2024-01-01", "2023-12-01")
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
