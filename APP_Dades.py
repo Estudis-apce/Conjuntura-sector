@@ -398,7 +398,7 @@ def table_trim(data_ori, year_ini, rounded=False, formated=True):
     if rounded==True:
         numeric_columns = data_ori.select_dtypes(include=['float64', 'int64']).columns
         data_ori[numeric_columns] = data_ori[numeric_columns].applymap(lambda x: round(x, 1))
-    output_data = data_ori.set_index(["Any", "Trimestre"]).T.dropna(axis=1, how="all")
+    output_data = data_ori.set_index(["Any", "Trimestre"]).T #.dropna(axis=1, how="all")
     if formated==True:   
         return(format_dataframes(output_data, True))
     else:
