@@ -1906,12 +1906,12 @@ if selected=="Districtes de Barcelona":
                 try:
                     st.metric(label="**Habitatges iniciats plurifamiliars**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges iniciats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges iniciats plurifamiliars", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges iniciats plurifamiliars**", value="Pendent", delta="N/A")
+                    st.metric(label="**Habitatges iniciats plurifamiliars**", value=0, delta="N/A")
             with right:
                 try:
                     st.metric(label="**Habitatges iniciats unifamiliars**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges iniciats unifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges iniciats unifamiliars", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges iniciats plurifamiliars**", value="Pendent", delta="N/A")
+                    st.metric(label="**Habitatges iniciats plurifamiliars**", value=0, delta="N/A")
             with left:
                 try:
                     st.metric(label="**Habitatges acabats**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges acabats", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges acabats", "var")}%""")
@@ -1921,12 +1921,12 @@ if selected=="Districtes de Barcelona":
                 try:
                     st.metric(label="**Habitatges acabats plurifamiliars**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges acabats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges acabats plurifamiliars", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges acabats plurifamiliars**", value="Pendent", delta="N/A")           
+                    st.metric(label="**Habitatges acabats plurifamiliars**", value=0, delta="N/A")           
             with right:
                 try:
                     st.metric(label="**Habitatges acabats unifamiliars**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges acabats unifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges acabats unifamiliars", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges acabats unifamiliars**", value="Pendent", delta="N/A")
+                    st.metric(label="**Habitatges acabats unifamiliars**", value=0, delta="N/A")
             selected_columns_ini = [col for col in table_dis.columns.tolist() if col.startswith("Habitatges iniciats ")]
             selected_columns_fin = [col for col in table_dis.columns.tolist() if col.startswith("Habitatges acabats ")]
             selected_columns_aux = ["Habitatges iniciats", "Habitatges acabats"]
