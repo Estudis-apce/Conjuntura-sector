@@ -44,7 +44,20 @@ load_css_file(path + "main.css")
 #     """
 #     st.markdown(markdown, unsafe_allow_html=True)
 
-st.markdown(f"""<script>document.domain="apcebcn.cat";</script>""", unsafe_allow_html=True)
+
+st.markdown("""<script>
+function sendHeight() {
+    const height = document.documentElement.scrollHeight;
+    window.parent.postMessage({
+        'frameHeight': height
+    }, 'https://apcebcn.cat'); 
+}
+
+window.onload = sendHeight;
+</script> 
+""", unsafe_allow_html=True)
+
+st.markdown("""<script>document.domain="apcebcn.cat";</script>""", unsafe_allow_html=True)
 
 # Creating a dropdown menu with options and icons, and customizing the appearance of the menu using CSS styles.
 left_col, right_col, margin_right = st.columns((0.15, 1, 0.15))
