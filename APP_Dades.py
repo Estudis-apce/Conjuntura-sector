@@ -10,7 +10,7 @@ import geopandas as gpd
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import plotly.graph_objects as go
 import matplotlib.colors as colors
-# import streamlit.components.v1 as components
+import streamlit.components.v1 as components
 import streamlit_authenticator as stauth
 import yaml
 from yaml.loader import SafeLoader
@@ -45,7 +45,7 @@ load_css_file(path + "main.css")
 #     st.markdown(markdown, unsafe_allow_html=True)
 
 
-st.markdown("""<script>
+components.html("""<script>
 function sendHeight() {
     const height = document.documentElement.scrollHeight;
     window.parent.postMessage({
@@ -55,9 +55,9 @@ function sendHeight() {
 
 window.onload = sendHeight;
 </script> 
-""", unsafe_allow_html=True)
+""")
 
-st.markdown("""<script>document.domain="apcebcn.cat";</script>""", unsafe_allow_html=True)
+components.html("""<script>document.domain="apcebcn.cat";</script>""")
 
 # Creating a dropdown menu with options and icons, and customizing the appearance of the menu using CSS styles.
 left_col, right_col, margin_right = st.columns((0.15, 1, 0.15))
