@@ -57,7 +57,7 @@ window.onload = sendHeight;
 </script> 
 """)
 
-components.html("""<script>document.domain="apcebcn.cat";</script>""")
+# components.html("""<script>document.domain="apcebcn.cat";</script>""")
 
 # Creating a dropdown menu with options and icons, and customizing the appearance of the menu using CSS styles.
 left_col, right_col, margin_right = st.columns((0.15, 1, 0.15))
