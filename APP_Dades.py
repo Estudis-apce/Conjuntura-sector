@@ -50,9 +50,8 @@ function sendHeight() {
     const height = document.documentElement.scrollHeight;
     window.parent.postMessage({
         'frameHeight': height
-    }, 'https://conjuntura-sector.apcebcn.cat');  
+    }, '*');  
 }
-
 window.onload = sendHeight;
 </script> 
 """)
