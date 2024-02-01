@@ -45,7 +45,19 @@ load_css_file(path + "main.css")
 #     st.markdown(markdown, unsafe_allow_html=True)
 
 
-components.html("""<script>
+# components.html("""<script>
+# function sendHeight() {
+#     const height = document.documentElement.scrollHeight;
+#     window.parent.postMessage({
+#         'frameHeight': height
+#     }, '*');  
+# }
+# window.onload = sendHeight;
+# </script> 
+# """)
+
+st.markdown("""
+<script>
 function sendHeight() {
     const height = document.documentElement.scrollHeight;
     window.parent.postMessage({
@@ -54,7 +66,8 @@ function sendHeight() {
 }
 window.onload = sendHeight;
 </script> 
-""")
+""", unsafe_allow_html=True)
+
 
 # components.html("""<script>document.domain="apcebcn.cat";</script>""")
 
