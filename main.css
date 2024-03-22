@@ -147,7 +147,7 @@ header {visibility: hidden;}
   font-weight: bold;
 }
 
-div[data-testid="metric-container"] {
+div[data-testid="stMetric"] {
   background-color: #fac678;
   border: 1px solid #fac678;
   padding: 0.3% 1% 0.3% 1%;
@@ -157,31 +157,31 @@ div[data-testid="metric-container"] {
   overflow-wrap: break-word;
 }
 
-[data-testid="metric-container"] {
+[data-testid="stMetric"] {
   height: fit-content;
   margin: auto;
   overflow: visible;
 }
 
-[data-testid="metric-container"] > div {
+[data-testid="stMetric"] > div {
   width: fit-content;
   margin: auto;
   overflow: visible;
 }
 
-[data-testid="metric-container"] label {
+[data-testid="stMetric"] label {
   width: fit-content;
   margin: 5px auto;
   overflow: visible;
 }
 
-div[data-testid="metric-container"] {
+div[data-testid="stMetric"] {
   color: #7a3601;
   overflow-wrap: break-word;
   overflow: visible;
 }
 
-div[data-testid="metric-container"] > label[data-testid="stMetricLabel"] > div {
+div[data-testid="stMetric"]  label{
   overflow-wrap: break-word;
   white-space: break-spaces;
   color: #7a3601;

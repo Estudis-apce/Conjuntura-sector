@@ -33,16 +33,16 @@ def load_css_file(css_file_path):
         return st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 load_css_file(path + "main.css")
 
-# left_col, right_col, margin_right = st.columns((0.25, 1, 0.25))
-# with right_col:
-#     with open(path + "APCE_mod.png", "rb") as f:
-#         data_uri = base64.b64encode(f.read()).decode("utf-8")
-#     markdown = f"""
-#     <div class="image">
-#     <img src="data:image/png;base64, {data_uri}" alt="image" />
-#     </div>
-#     """
-#     st.markdown(markdown, unsafe_allow_html=True)
+left_col, right_col, margin_right = st.columns((0.25, 1, 0.25))
+with right_col:
+    with open(path + "APCE_mod.png", "rb") as f:
+        data_uri = base64.b64encode(f.read()).decode("utf-8")
+    markdown = f"""
+    <div class="image">
+    <img src="data:image/png;base64, {data_uri}" alt="image" />
+    </div>
+    """
+    st.markdown(markdown, unsafe_allow_html=True)
 
 
 # components.html("""<script>
@@ -97,7 +97,7 @@ with right_col:
             })
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
-max_trim_lloguer= "2023-10-01"
+max_trim_lloguer= "2024-01-01"
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
@@ -813,7 +813,7 @@ if selected == "Catalunya":
             desc_bec = f'<div style="text-align: justify">{desc_bec_aux}</div>'
             st.markdown(desc_bec, unsafe_allow_html=True)
             st.markdown("")
-            st.markdown(f"""<a href="https://drive.google.com/file/d/1OfCCmtxe92THECNRkFEU_bNb4Q_eGzPw/view?usp=sharing" target="_blank"><button class="download-button">Descarregar BEC</button></a>""", unsafe_allow_html=True)
+            st.markdown(f"""<a href="https://drive.google.com/file/d/1PblmxMCMUybFB_cgc0YFGYbCq55nJbAh/view?usp=sharing" target="_blank"><button class="download-button">Descarregar BEC</button></a>""", unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
