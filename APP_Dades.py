@@ -33,46 +33,18 @@ def load_css_file(css_file_path):
         return st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 load_css_file(path + "main.css")
 
-left_col, right_col, margin_right = st.columns((0.25, 1, 0.25))
-with right_col:
-    with open(path + "APCE_mod.png", "rb") as f:
-        data_uri = base64.b64encode(f.read()).decode("utf-8")
-    markdown = f"""
-    <div class="image">
-    <img src="data:image/png;base64, {data_uri}" alt="image" />
-    </div>
-    """
-    st.markdown(markdown, unsafe_allow_html=True)
+
+with open(path + "APCE_mod.png", "rb") as f:
+    data_uri = base64.b64encode(f.read()).decode("utf-8")
+markdown = f"""
+<div class="image-apce-container">
+<img src="data:image/png;base64, {data_uri}" alt="image" class="image-apce">
+</div>
+"""
+st.markdown(markdown, unsafe_allow_html=True)
 
 
-# components.html("""<script>
-# function sendHeight() {
-#     const height = document.documentElement.scrollHeight;
-#     window.parent.postMessage({
-#         'frameHeight': height
-#     }, '*');  
-# }
-# window.onload = sendHeight;
-# </script> 
-# """)
-
-st.markdown("""
-<script>
-function sendHeight() {
-    const height = document.documentElement.scrollHeight;
-    window.parent.postMessage({
-        'frameHeight': height
-    }, '*');  
-}
-window.onload = sendHeight;
-</script> 
-""", unsafe_allow_html=True)
-
-
-# components.html("""<script>document.domain="apcebcn.cat";</script>""")
-
-# Creating a dropdown menu with options and icons, and customizing the appearance of the menu using CSS styles.
-left_col, right_col, margin_right = st.columns((0.15, 1, 0.15))
+left_col, right_col, margin_right = st.columns((0.2, 1, 0.2))
 with right_col:
     selected = option_menu(
         menu_title=None,  # required
@@ -82,10 +54,10 @@ with right_col:
         default_index=0,  # optional
         orientation="horizontal",
         styles={
-            "container": {"padding": "0px important!", "background-color": "#fcefdc", "align":"center", "overflow":"hidden"},
-            "icon": {"color": "#bf6002", "font-size": "17px"},
+            "container": {"padding": "0px important!", "background-color": "#fcefdc", "align":"justify", "overflow":"hidden"},
+            "icon": {"color": "#bf6002", "font-size": "1.1em"},
             "nav-link": {
-                "font-size": "17px",
+                "font-size": "1.1em",
                 "text-align": "center",
                 "font-weight": "bold",
                 "color":"#363534",
@@ -97,11 +69,21 @@ with right_col:
             })
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
-max_trim_lloguer= "2024-01-01"
+max_trim_lloguer= "2024-04-01"
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def import_data(trim_limit, month_limit):
+    with open('Censo2021.json', 'r') as outfile:
+        list_censo = [pd.DataFrame.from_dict(item) for item in json.loads(outfile.read())]
+    censo_2021= list_censo[0].copy()
+    rentaneta_mun= list_censo[1].copy()
+    rentaneta_mun = rentaneta_mun.applymap(lambda x: x.replace(".", "") if isinstance(x, str) else x)
+    rentaneta_mun = rentaneta_mun.apply(pd.to_numeric, errors='ignore')
+    censo_2021_dis= list_censo[2].copy()
+    rentaneta_dis = list_censo[3].copy()
+    rentaneta_dis = rentaneta_dis.applymap(lambda x: x.replace(".", "") if isinstance(x, str) else x)
+    rentaneta_dis = rentaneta_dis.apply(pd.to_numeric, errors='ignore')
     with open('DT_simple.json', 'r') as outfile:
         list_of_df = [pd.DataFrame.from_dict(item) for item in json.loads(outfile.read())]
     DT_terr= list_of_df[0].copy()
@@ -141,9 +123,9 @@ def import_data(trim_limit, month_limit):
     DT_mun_y_def = pd.merge(DT_mun_y_pre2, DT_mun_y_aux3, how="left", on="Fecha")    
     DT_mun_y_def = DT_mun_y_def[[col for col in DT_mun_y_def.columns if any(mun in col for mun in mun_list)]]
 
-    return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis])
+    return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis])
 
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis = import_data("2024-01-01", "2023-12-01")
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis = import_data("2024-04-01", "2024-05-01")
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
@@ -229,13 +211,13 @@ def tidy_present_monthly_diff(data_ori, columns_sel, year):
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def indicator_year(df, df_aux, year, variable, tipus, frequency=None):
-    if (year==str(datetime.now().year-1) and (frequency=="month") and ((tipus=="var") or (tipus=="diff"))):
+    if (year==str(datetime.now().year) and (frequency=="month") and ((tipus=="var") or (tipus=="diff"))):
         return(round(tidy_present_monthly(df_aux, variable, year),2))
-    if (year==str(datetime.now().year-1) and (frequency=="month_aux") and (tipus=="var")):
+    if (year==str(datetime.now().year) and (frequency=="month_aux") and (tipus=="var")):
         return(round(tidy_present_monthly_aux(df_aux, variable, year),2))
-    if (year==str(datetime.now().year-1) and (frequency=="month_aux") and ((tipus=="diff"))):
+    if (year==str(datetime.now().year) and (frequency=="month_aux") and ((tipus=="diff"))):
         return(round(tidy_present_monthly_diff(df_aux, variable, year),2))
-    if (year==str(datetime.now().year-1) and ((tipus=="var") or (tipus=="diff"))):
+    if (year==str(datetime.now().year) and ((tipus=="var") or (tipus=="diff"))):
         return(round(tidy_present(df_aux.reset_index(), variable, year),2))
     if tipus=="level":
         df = df[df.index==year][variable]
@@ -369,6 +351,59 @@ def area_plotly(table_n, selection_n, title_main, title_y, trim):
     )
     return fig
 
+@st.cache_resource
+def bar_plotly_demografia(table_n, selection_n, title_main, title_y, year_ini, year_fin=datetime.now().year-1):
+    table_n = table_n.reset_index()
+    table_n["Any"] = table_n["Any"].astype(int)
+    plot_cat = table_n[(table_n["Any"] >= year_ini) & (table_n["Any"] <= year_fin)][["Any"] + selection_n].set_index("Any")
+    colors = ["#6495ED", "#7DF9FF",  "#87CEEB", "#A7C7E7"]
+    traces = []
+    for i, col in enumerate(plot_cat.columns):
+        trace = go.Bar(
+            x=plot_cat.index,
+            y=plot_cat[col]/1000,
+            name=col,
+            text=plot_cat[col], 
+            textfont=dict(color="white"),
+            marker=dict(color=colors[i % len(colors)]),
+        )
+        traces.append(trace)
+    layout = go.Layout(
+        title=dict(text=title_main, font=dict(size=13)),
+        xaxis=dict(title="Año"),
+        yaxis=dict(title=title_y, tickformat=",d"),
+        legend=dict(x=0, y=1.15, orientation="h"),
+        paper_bgcolor = "#fcefdc",
+        plot_bgcolor='#fcefdc'
+    )
+    fig = go.Figure(data=traces, layout=layout)
+    return fig
+
+@st.cache_resource
+def donut_plotly_demografia(table_n, selection_n, title_main, title_y):
+    plot_cat = table_n[selection_n]
+    plot_cat = plot_cat.set_index("Tamany").sort_index()
+    colors = ["#6495ED", "#7DF9FF",  "#87CEEB", "#A7C7E7", "#FFA07A"]
+    traces = []
+    for i, col in enumerate(plot_cat.columns):
+        trace = go.Pie(
+            labels=plot_cat.index,
+            values=plot_cat[col],
+            name=col,
+            hole=0.5,
+            marker=dict(colors=colors)
+        )
+        traces.append(trace)
+    layout = go.Layout(
+        title=dict(text=title_main, font=dict(size=13)),
+        yaxis=dict(title=title_y),
+        legend=dict(x=0, y=1.15, orientation="h"),
+        paper_bgcolor = "#fcefdc",
+        plot_bgcolor='#fcefdc'
+    )
+    fig = go.Figure(data=traces, layout=layout)
+    return fig
+
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def table_monthly(data_ori, year_ini, rounded=True):
@@ -453,22 +488,30 @@ def table_year(data_ori, year_ini, rounded=False, formated=True):
         return(format_dataframes(data_output, False))
     
 #Defining years
-max_year= 2024
+max_year= 2025
 available_years = list(range(2018,max_year))
-index_year = 2023
+index_year = 2024
 
 ###################################################################### SCRIPT PESTAÑAS ##########################################################################
 if selected == "Espanya":
-    st.sidebar.header("**ESPANYA**")
-    selected_type = st.sidebar.radio("", ("Sector residencial","Indicadors econòmics"))
+    left, center, right= st.columns((1,1,1))
+    with left:
+        selected_type = st.radio("**Selecciona un tipus d'indicador**", ("Sector residencial","Indicadors econòmics"), horizontal=True)
+    with center:
+        if selected_type=="Indicadors econòmics":
+            selected_index = st.selectbox("**Selecciona un indicador:**", ["Índex de Preus al Consum (IPC)", "Consum de ciment","Tipus d'interès", "Hipoteques"], key=101)
+        if selected_type=="Sector residencial":
+            selected_index = st.selectbox("**Selecciona un indicador:**", ["Producció", "Compravendes", "Preus"], key=201)
+    with right:
+        selected_year_n = st.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year), key=102)
+
     if selected_type=="Indicadors econòmics":
-        selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", ["Índex de Preus al Consum (IPC)", "Consum de ciment","Tipus d'interès", "Hipoteques"])
-        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year))
         if selected_index=="Índex de Preus al Consum (IPC)":
             st.subheader("ÍNDEX DE PREUS AL CONSUM (IPC)")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2002
             table_espanya_m = tidy_Catalunya_mensual(DT_monthly, ["Fecha", "IPC_Nacional_x", "IPC_subyacente", "IGC_Nacional"], f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data","IPC (Base 2021)","IPC subjacent", "IGC"])
+
             table_espanya_m["Inflació"] = table_espanya_m["IPC (Base 2021)"].pct_change(12).mul(100)
             table_espanya_m["Inflació subjacent"] = round(table_espanya_m["IPC subjacent"].mul(100),1)
             table_espanya_m["Índex de Garantia de Competitivitat (IGC)"] = round(table_espanya_m["IGC"],1)
@@ -478,26 +521,27 @@ if selected == "Espanya":
             table_espanya_y["Inflació subjacent"] = round(table_espanya_y["IPC subjacent"].mul(100),1)
             table_espanya_y["Índex de Garantia de Competitivitat (IGC)"] = round(table_espanya_y["IGC"],1)
             table_espanya_y = table_espanya_y.drop(["IPC subjacent", "IGC"], axis=1)
-            # if selected_year_n==max_year:
-            #     left, center, right= st.columns((1,1,1))
-            #     with left:
-            #         st.metric(label="**Inflació** (var. anual)", value=f"""{round(table_espanya_m["Inflació"][-1],1)}%""")
-            #     with center:
-            #         st.metric(label="**Inflació subjacent** (var. anual)", value=f"""{round(table_espanya_m["Inflació subjacent"][-1],1)}%""")
-            #     with right:
-            #         st.metric(label="**Índex de Garantia de Competitivitat** (var. anual)", value=f"""{round(table_espanya_m["Índex de Garantia de Competitivitat (IGC)"][-1],1)}%""")
-            # if selected_year_n!=max_year:
-            left, center, right= st.columns((1,1,1))
-            with left:
-                st.metric(label="**Inflació** (var. anual mitjana)", value=f"""{round(table_espanya_y[table_espanya_y.index==str(selected_year_n)]["Inflació"].values[0], 1)}%""")
-            with center:
-                st.metric(label="**Inflació subjacent** (var. anual mitjana)", value=f"""{round(table_espanya_y[table_espanya_y.index==str(selected_year_n)]["Inflació subjacent"].values[0], 1)}%""")
-            with right:
-                st.metric(label="**Índex de Garantia de Competitivitat** (var. anual mitjana)", value=f"""{round(table_espanya_y[table_espanya_y.index==str(selected_year_n)]["Índex de Garantia de Competitivitat (IGC)"].values[0], 1)}%""")
+
+            if selected_year_n==max_year-1:
+                left, center, right= st.columns((1,1,1))
+                with left:
+                    st.metric(label="**Inflació** (var. anual)", value=f"""{round(table_espanya_m["Inflació"][-1],1)}%""")
+                with center:
+                    st.metric(label="**Inflació subjacent** (var. anual)", value=f"""{round(table_espanya_m["Inflació subjacent"][-1],1)}%""")
+                with right:
+                    st.metric(label="**Índex de Garantia de Competitivitat** (var. anual)", value=f"""{round(table_espanya_m["Índex de Garantia de Competitivitat (IGC)"][-1],1)}%""")
+            if selected_year_n!=max_year-1:
+                left, center, right= st.columns((1,1,1))
+                with left:
+                    st.metric(label="**Inflació** (var. anual mitjana)", value=f"""{round(table_espanya_y[table_espanya_y.index==str(selected_year_n)]["Inflació"].values[0], 1)}%""")
+                with center:
+                    st.metric(label="**Inflació subjacent** (var. anual mitjana)", value=f"""{round(table_espanya_y[table_espanya_y.index==str(selected_year_n)]["Inflació subjacent"].values[0], 1)}%""")
+                with right:
+                    st.metric(label="**Índex de Garantia de Competitivitat** (var. anual mitjana)", value=f"""{round(table_espanya_y[table_espanya_y.index==str(selected_year_n)]["Índex de Garantia de Competitivitat (IGC)"].values[0], 1)}%""")
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_monthly(table_espanya_m, 2023).to_html(), unsafe_allow_html=True)
+            st.markdown(table_monthly(table_espanya_m[(table_espanya_m["Data"]>=f"{str(selected_year_n)}-01-01") & (table_espanya_m["Data"]<f"{str(selected_year_n+1)}-01-01")], selected_year_n).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_monthly(table_espanya_m, 2023), f"{selected_index}_Espanya.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -540,7 +584,8 @@ if selected == "Espanya":
             table_espanya_q = table_espanya_q[["Euríbor a 1 mes","Euríbor a 3 mesos","Euríbor a 6 mesos", "Euríbor a 1 any", "Tipus d'interès d'hipoteques"]]
             table_espanya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha", "Euribor_1m", "Euribor_3m","Euribor_6m", "Euribor_1y", "tipo_hipo"], min_year, max_year,["Any", "Euríbor a 1 mes","Euríbor a 3 mesos","Euríbor a 6 mesos", "Euríbor a 1 any", "Tipus d'interès d'hipoteques"])
             table_espanya_y = table_espanya_y[["Euríbor a 1 mes","Euríbor a 3 mesos","Euríbor a 6 mesos","Euríbor a 1 any", "Tipus d'interès d'hipoteques"]]
-            if selected_year_n==2023:
+
+            if selected_year_n==max_year-1:
                 left, left_center, right_center, right = st.columns((1,1,1,1))
                 with left:
                     st.metric(label="**Euríbor a 3 mesos** (%)", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Euríbor a 3 mesos", "level")}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), ["Euríbor a 3 mesos"], "diff", "month_aux")} p.b.""")
@@ -550,7 +595,7 @@ if selected == "Espanya":
                     st.metric(label="**Euríbor a 1 any** (%)", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Euríbor a 1 any", "level")}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), ["Euríbor a 1 any"], "diff", "month_aux")} p.b.""")
                 with right:
                     st.metric(label="**Tipus d'interès d'hipoteques** (%)", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Tipus d'interès d'hipoteques", "level")}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), ["Tipus d'interès d'hipoteques"], "diff", "month_aux")} p.b.""")
-            if selected_year_n!=2023:
+            if selected_year_n!=max_year-1:
                 left, left_center, right_center, right = st.columns((1,1,1,1))
                 with left:
                     st.metric(label="**Euríbor a 3 mesos** (%)", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Euríbor a 3 mesos", "level")}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), "Euríbor a 3 mesos", "diff", "month")} p.b.""")
@@ -563,7 +608,7 @@ if selected == "Espanya":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_monthly(table_espanya_m, 2023).to_html(), unsafe_allow_html=True)
+            st.markdown(table_monthly(table_espanya_m[(table_espanya_m["Fecha"]>=f"{str(selected_year_n)}-01-01") & (table_espanya_m["Fecha"]<f"{str(selected_year_n+1)}-01-01")], selected_year_n).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_monthly(table_espanya_m, 2023), f"{selected_index}_Espanya.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -586,13 +631,13 @@ if selected == "Espanya":
             table_espanya_q = table_espanya_q[["Nombre d'hipoteques", "Import d'hipoteques"]]
             table_espanya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","hipon_Nacional", "hipoimp_Nacional"], min_year, max_year,["Any", "Nombre d'hipoteques", "Import d'hipoteques"])
             table_espanya_y = table_espanya_y[["Nombre d'hipoteques", "Import d'hipoteques"]]
-            if selected_year_n==2023:
+            if selected_year_n==max_year-1:
                 left, right = st.columns((1,1))
                 with left:
                     st.metric(label="**Nombre d'hipoteques**", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Nombre d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), ["Nombre d'hipoteques"], "var", "month_aux")}%""")
                 with right:
                     st.metric(label="**Import d'hipoteques** (Milers d'euros)", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Import d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), ["Import d'hipoteques"], "var", "month_aux")}%""")
-            if selected_year_n!=2023:
+            if selected_year_n!=max_year-1:
                 left, right = st.columns((1,1))
                 with left:
                     st.metric(label="**Nombre d'hipoteques**", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Nombre d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), "Nombre d'hipoteques", "var")}%""")
@@ -619,8 +664,6 @@ if selected == "Espanya":
                 st.plotly_chart(bar_plotly(table_espanya_y, ["Import d'hipoteques"], "Evolució anual de l'import d'hipoteques (Milers €)", "Import d'hipoteques",  2005), use_container_width=True, responsive=True)
 
     if selected_type=="Sector residencial":
-        selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", ["Producció", "Compravendes", "Preus"])
-        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year))
         if selected_index=="Producció":
             min_year=2008
             st.subheader("PRODUCCIÓ D'HABITATGES A ESPANYA")
@@ -629,21 +672,49 @@ if selected == "Espanya":
             table_esp = tidy_Catalunya(DT_terr, ["Fecha"] + concatenate_lists(["iniviv_","finviv_"], "Nacional") + concatenate_lists(["calprov_", "calprovpub_", "calprovpriv_", "caldef_", "caldefpub_", "caldefpriv_"], "Espanya"), f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Habitatges iniciats", "Habitatges acabats", 
                                                                                                                                                                                                                                                                                             "Qualificacions provisionals d'HPO", "Qualificacions provisionals d'HPO (Promotor públic)", "Qualificacions provisionals d'HPO (Promotor privat)", 
                                                                                                                                                                                                                                                                                             "Qualificacions definitives d'HPO",  "Qualificacions definitives d'HPO (Promotor públic)", "Qualificacions definitives d'HPO (Promotor privat)"])
-            table_esp_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha"] + concatenate_lists(["iniviv_","finviv_"], "Nacional")+ concatenate_lists(["calprov_", "calprovpub_", "calprovpriv_", "caldef_", "caldefpub_", "caldefpriv_"], "Espanya"), min_year, max_year,["Any", "Habitatges iniciats", "Habitatges acabats", 
-                                                                                                                                                                                                                                                        "Qualificacions provisionals d'HPO", "Qualificacions provisionals d'HPO (Promotor públic)", "Qualificacions provisionals d'HPO (Promotor privat)", 
-            
-                                                                                                                                                                                                                                                    "Qualificacions definitives d'HPO",  "Qualificacions definitives d'HPO (Promotor públic)", "Qualificacions definitives d'HPO (Promotor privat)"])
+            table_esp_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha"] + concatenate_lists(["iniviv_","finviv_"], "Nacional")+ concatenate_lists(["calprov_", "calprovpub_", "calprovpriv_", "caldef_", "caldefpub_", "caldefpriv_"], "Espanya"), min_year, max_year,["Any", "Habitatges iniciats", "Habitatges acabats", "Qualificacions provisionals d'HPO", "Qualificacions provisionals d'HPO (Promotor públic)", "Qualificacions provisionals d'HPO (Promotor privat)", "Qualificacions definitives d'HPO",  "Qualificacions definitives d'HPO (Promotor públic)", "Qualificacions definitives d'HPO (Promotor privat)"])
             left, right = st.columns((1,1))
             with left:
                 st.metric(label="**Habitatges iniciats**", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Habitatges iniciats", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp_m, str(selected_year_n), "Habitatges iniciats", "var", "month")}%""")
-                st.metric(label="**Qualificacions provisionals d'HPO**", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions provisionals d'HPO", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions provisionals d'HPO", "var")}%""")
-                st.metric(label="**Qualificacions provisionals d'HPO** (Promotor públic)", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions provisionals d'HPO (Promotor públic)", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions provisionals d'HPO (Promotor públic)", "var")}%""")
-                st.metric(label="**Qualificacions definitives d'HPO** (Promotor públic)", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions definitives d'HPO (Promotor públic)", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions definitives d'HPO (Promotor públic)", "var")}%""")
             with right:
                 st.metric(label="**Habitatges acabats**", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Habitatges acabats", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp_m, str(selected_year_n), "Habitatges acabats", "var","month")}%""")
-                st.metric(label="**Qualificacions definitives d'HPO**", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions definitives d'HPO", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions definitives d'HPO", "var")}%""")
-                st.metric(label="**Qualificacions provisionals d'HPO** (Promotor privat)", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions provisionals d'HPO (Promotor privat)", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions provisionals d'HPO (Promotor privat)", "var")}%""")
-                st.metric(label="**Qualificacions definitives d'HPO** (Promotor privat)", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions definitives d'HPO (Promotor privat)", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions definitives d'HPO (Promotor privat)", "var")}%""")
+
+            left, right = st.columns((1,1))    
+            with left:
+                try:
+                    st.metric(label="**Qualificacions provisionals d'HPO**", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions provisionals d'HPO", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions provisionals d'HPO", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Qualificacions provisionals d'HPO**", value="Pendent")
+            with right:
+                try:
+                    st.metric(label="**Qualificacions definitives d'HPO**", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions definitives d'HPO", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions definitives d'HPO", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Qualificacions definitives d'HPO**", value="Pendent")
+
+            left, right = st.columns((1,1))
+            with left:
+                try:
+                    st.metric(label="**Qualificacions provisionals d'HPO** (Promotor públic)", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions provisionals d'HPO (Promotor públic)", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions provisionals d'HPO (Promotor públic)", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Qualificacions provisionals d'HPO** (Promotor públic)", value="Pendent")
+
+            with right:
+                try:
+                    st.metric(label="**Qualificacions provisionals d'HPO** (Promotor privat)", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions provisionals d'HPO (Promotor privat)", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions provisionals d'HPO (Promotor privat)", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Qualificacions provisionals d'HPO** (Promotor privat)", value="Pendent")
+            left, right = st.columns((1,1))
+            with left:
+                try:
+                    st.metric(label="**Qualificacions definitives d'HPO** (Promotor públic)", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions definitives d'HPO (Promotor públic)", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions definitives d'HPO (Promotor públic)", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Qualificacions definitives d'HPO** (Promotor públic)", value="Pendent")
+            with right:
+                try:
+                    st.metric(label="**Qualificacions definitives d'HPO** (Promotor privat)", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions definitives d'HPO (Promotor privat)", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Qualificacions definitives d'HPO (Promotor privat)", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Qualificacions definitives d'HPO** (Promotor privat)", value="Pendent")
+
             selected_columns_aux = ["Habitatges iniciats", "Habitatges acabats"]
             selected_columns_aux1 = ["Qualificacions provisionals d'HPO (Promotor públic)", "Qualificacions provisionals d'HPO (Promotor privat)"]
             selected_columns_aux2 = ["Qualificacions definitives d'HPO (Promotor públic)", "Qualificacions definitives d'HPO (Promotor privat)"]
@@ -679,11 +750,20 @@ if selected == "Espanya":
 
             left, center, right = st.columns((1,1,1))
             with left:
-                st.metric(label="**Compravendes d'habitatge total**", value=f"""{indicator_year(table_esp_y, table_esp_m, str(selected_year_n), "Compravendes d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp_m, str(selected_year_n), "Compravendes d'habitatge total", "var", "month")}%""")
+                try:
+                    st.metric(label="**Compravendes d'habitatge total**", value=f"""{indicator_year(table_esp_y, table_esp_m, str(selected_year_n), "Compravendes d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp_m, str(selected_year_n), "Compravendes d'habitatge total", "var", "month")}%""")
+                except IndexError:
+                    st.metric(label="**Compravendes d'habitatge total**", value="Pendent")
             with center:
-                st.metric(label="**Compravendes d'habitatge de segona mà**", value=f"""{indicator_year(table_esp_y, table_esp_m, str(selected_year_n), "Compravendes d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp_m, str(selected_year_n), "Compravendes d'habitatge de segona mà", "var", "month")}%""")
+                try:
+                    st.metric(label="**Compravendes d'habitatge de segona mà**", value=f"""{indicator_year(table_esp_y, table_esp_m, str(selected_year_n), "Compravendes d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp_m, str(selected_year_n), "Compravendes d'habitatge de segona mà", "var", "month")}%""")
+                except IndexError:
+                    st.metric(label="**Compravendes d'habitatge de segona mà**", value="Pendent")
             with right:
-                st.metric(label="**Compravendes d'habitatge nou**", value=f"""{indicator_year(table_esp_y, table_esp_m, str(selected_year_n), "Compravendes d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp_m, str(selected_year_n), "Compravendes d'habitatge nou", "var", "month")}%""")
+                try:
+                    st.metric(label="**Compravendes d'habitatge nou**", value=f"""{indicator_year(table_esp_y, table_esp_m, str(selected_year_n), "Compravendes d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_esp_y, table_esp_m, str(selected_year_n), "Compravendes d'habitatge nou", "var", "month")}%""")
+                except IndexError:
+                    st.metric(label="**Compravendes d'habitatge nou**", value="Pendent")
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -707,9 +787,16 @@ if selected == "Espanya":
                 table_esp_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha", "prvivlfom_Nacional", "prvivlnfom_Nacional"], min_year, max_year,["Any", "Preu de l'habitatge lliure", "Preu de l'habitatge lliure nou"])
                 left, right = st.columns((1,1))
                 with left:
-                    st.metric(label=f"""**Preu de l'habitatge lliure** (€/m\u00b2)""", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Preu de l'habitatge lliure", "level"):,.0f}""")
+                    try:
+                        st.metric(label=f"""**Preu de l'habitatge lliure** (€/m\u00b2)""", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Preu de l'habitatge lliure", "level"):,.0f}""")
+                    except IndexError:
+                        st.metric(label="**Preu de l'habitatge lliure** (€/m\u00b2)", value="Pendent")
                 with right:
-                    st.metric(label=f"""**Preu de l'habitatge lliure nou** (€/m\u00b2)""", value=f"""{round(indicator_year(table_esp_y, table_esp, str(selected_year_n), "Preu de l'habitatge lliure nou", "level"),1):,.0f}""")               
+                    try:
+                        st.metric(label=f"""**Preu de l'habitatge lliure nou** (€/m\u00b2)""", value=f"""{round(indicator_year(table_esp_y, table_esp, str(selected_year_n), "Preu de l'habitatge lliure nou", "level"),1):,.0f}""")
+                    except IndexError:
+                        st.metric(label="**Preu de l'habitatge lliure nou** (€/m\u00b2)", value="Pendent")
+
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -731,11 +818,21 @@ if selected == "Espanya":
                 table_esp_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha", "ipves", "ipvses", "ipvnes"], min_year, max_year,["Any", "Preu d'habitatge total", "Preus d'habitatge de segona mà", "Preus d'habitatge nou"])
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label=f"""**Preu d'habitatge total** (var. anual)""", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Preu d'habitatge total", "level")} %""")
+                    try:
+                        st.metric(label=f"""**Preu d'habitatge total** (var. anual)""", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Preu d'habitatge total", "level")} %""")
+                    except IndexError:
+                        st.metric(label="**Preu d'habitatge total** (var. anual)", value="Pendent")
                 with center:
-                    st.metric(label=f"""**Preu d'habitatge de segona mà** (var. anual)""", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Preus d'habitatge de segona mà", "level")} %""")
+                    try:
+                        st.metric(label=f"""**Preu d'habitatge de segona mà** (var. anual)""", value=f"""{indicator_year(table_esp_y, table_esp, str(selected_year_n), "Preus d'habitatge de segona mà", "level")} %""")
+                    except IndexError:
+                        st.metric(label="**Preu d'habitatge de segona mà** (var. anual)", value="Pendent")
                 with right:
-                    st.metric(label=f"""**Preu d'habitatge nou** (var. anual)""", value=f"""{round(indicator_year(table_esp_y, table_esp, str(selected_year_n), "Preus d'habitatge nou", "level"),1)} %""")                
+                    try:
+                        st.metric(label=f"""**Preu d'habitatge nou** (var. anual)""", value=f"""{round(indicator_year(table_esp_y, table_esp, str(selected_year_n), "Preus d'habitatge nou", "level"),1)} %""")
+                    except IndexError:
+                        st.metric(label="**Preu d'habitatge nou** (var. anual)", value="Pendent")
+
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -753,18 +850,30 @@ if selected == "Espanya":
                     st.plotly_chart(bar_plotly(table_esp_y, table_esp.columns.tolist(), "Índex anual de preus per tipologia d'habitatge (variació anual %)", "%", 2007), use_container_width=True, responsive=True)
 
 if selected == "Catalunya":
-    st.sidebar.header("**CATALUNYA**")
-    selected_indicator = st.sidebar.radio("", ("Sector residencial", "Indicadors econòmics"))
+    left, center, right= st.columns((1,1,1))
+    with left:
+        selected_indicator = st.radio("**Selecciona un tipus d'indicador**", ("Sector residencial","Indicadors econòmics"), horizontal=True, key=301)
+        if selected_indicator=="Sector residencial":
+            selected_type = st.radio("**Mercat de venda o lloguer**", ("Venda", "Lloguer"), horizontal=True)
+    with center:
+        if selected_indicator=="Indicadors econòmics":
+            selected_index = st.selectbox("**Selecciona un indicador:**", ["Costos de construcció", "Mercat laboral", "Consum de Ciment", "Hipoteques"], key=302)
+        if selected_indicator=="Sector residencial":
+            selected_index = st.selectbox("**Selecciona un indicador:**", ["Producció", "Compravendes", "Preus", "Superfície"], key=303)
+        # if (selected_type=="Lloguer") and (selected_indicator=="Sector residencial"):
+        #     st.write("")
+        
+    with right:
+        selected_year_n = st.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year), key=305)
+
     if selected_indicator=="Indicadors econòmics":
-        selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", ["Costos de construcció", "Mercat laboral", "Consum de Ciment", "Hipoteques"])
-        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year))
         if selected_index=="Mercat laboral":
             st.subheader("MERCAT LABORAL DEL SECTOR DE LA CONSTRUCCIÓ")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2008
-            table_catalunya_m = tidy_Catalunya_m(DT_monthly, ["Fecha"] + ["unempcons_Catalunya", "aficons_Catalunya"], f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Atur registrat del sector de la construcció", "Afiliats del sector de la construcció"])
-            table_catalunya_q = tidy_Catalunya(DT_terr, ["Fecha", "emptot_Catalunya", "empcons_Catalunya", "unempcons_Catalunya", "aficons_Catalunya"],  f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Total població ocupada", "Ocupació del sector de la construcció","Atur registrat del sector de la construcció", "Afiliats del sector de la construcció"])
-            table_catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","emptot_Catalunya", "empcons_Catalunya", "unempcons_Catalunya", "aficons_Catalunya"], min_year, max_year,["Any", "Total població ocupada", "Ocupació del sector de la construcció","Atur registrat del sector de la construcció", "Afiliats del sector de la construcció"])
+            table_catalunya_m = tidy_Catalunya_m(DT_monthly, ["Fecha"] + ["ssunempcons_Catalunya", "aficons_Catalunya"], f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Atur registrat del sector de la construcció", "Afiliats del sector de la construcció"])
+            table_catalunya_q = tidy_Catalunya(DT_terr, ["Fecha", "emptot_Catalunya", "empcons_Catalunya", "ssunempcons_Catalunya", "aficons_Catalunya"],  f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Total població ocupada", "Ocupació del sector de la construcció","Atur registrat del sector de la construcció", "Afiliats del sector de la construcció"])
+            table_catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","emptot_Catalunya", "empcons_Catalunya", "ssunempcons_Catalunya", "aficons_Catalunya"], min_year, max_year,["Any", "Total població ocupada", "Ocupació del sector de la construcció","Atur registrat del sector de la construcció", "Afiliats del sector de la construcció"])
             table_catalunya_q = table_catalunya_q.dropna(axis=0)
             table_catalunya_y = table_catalunya_y.dropna(axis=0)
             left, right = st.columns((1,1))
@@ -813,7 +922,7 @@ if selected == "Catalunya":
             desc_bec = f'<div style="text-align: justify">{desc_bec_aux}</div>'
             st.markdown(desc_bec, unsafe_allow_html=True)
             st.markdown("")
-            st.markdown(f"""<a href="https://drive.google.com/file/d/1PblmxMCMUybFB_cgc0YFGYbCq55nJbAh/view?usp=sharing" target="_blank"><button class="download-button">Descarregar BEC</button></a>""", unsafe_allow_html=True)
+            st.markdown(f"""<a href="https://drive.google.com/file/d/1SQpuAJUjsBBS_UPQl6rCrfATcqW_lH-s/" target="_blank"><button class="download-button">Descarregar BEC</button></a>""", unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -865,19 +974,19 @@ if selected == "Catalunya":
             table_catalunya_q = table_catalunya_q[["Nombre d'hipoteques", "Import d'hipoteques"]]
             table_catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","hipon_Catalunya", "hipoimp_Catalunya"], min_year, max_year,["Any", "Nombre d'hipoteques", "Import d'hipoteques"])
             table_catalunya_y = table_catalunya_y[["Nombre d'hipoteques", "Import d'hipoteques"]]
-            if selected_year_n==2023:
+
+            if selected_year_n==max_year-1:
                 left, right = st.columns((1,1))
                 with left:
                     st.metric(label="**Nombre d'hipoteques**", value=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Nombre d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_catalunya_y, table_catalunya_m, str(selected_year_n), ["Nombre d'hipoteques"], "var", "month_aux")}%""")
                 with right:
                     st.metric(label="**Import d'hipoteques** (Milers €)", value=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Import d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_catalunya_y, table_catalunya_m, str(selected_year_n), ["Import d'hipoteques"], "var", "month_aux")}%""")
-            if selected_year_n!=2023:
+            if selected_year_n!=max_year-1:
                 left, right = st.columns((1,1))
                 with left:
                     st.metric(label="**Nombre d'hipoteques**", value=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Nombre d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_catalunya_y, table_catalunya_m, str(selected_year_n), "Nombre d'hipoteques", "var")}%""")
                 with right:
                     st.metric(label="**Import d'hipoteques** (Milers €)", value=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Import d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_catalunya_y, table_catalunya_m, str(selected_year_n), "Import d'hipoteques", "var")}%""")
-
             selected_columns = ["Nombre d'hipoteques", "Import d'hipoteques"]
             st.markdown("")
             st.markdown("")
@@ -899,11 +1008,7 @@ if selected == "Catalunya":
                 st.plotly_chart(bar_plotly(table_catalunya_y, ["Import d'hipoteques"], "Evolució anual de l'import d'hipoteques (Milers €)", "Import d'hipoteques",  2005), use_container_width=True, responsive=True)
 
     if selected_indicator=="Sector residencial":
-        selected_type = st.sidebar.radio("**Mercat de venda o lloguer**", ("Venda", "Lloguer"))
         if selected_type=="Venda":
-            index_names = ["Producció", "Compravendes", "Preus", "Superfície"]
-            selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", index_names)
-            selected_year_n = st.sidebar.selectbox("****Selecciona un any:****", available_years, available_years.index(index_year))
             if selected_index=="Producció":
                 min_year=2008
                 st.subheader("PRODUCCIÓ D'HABITATGES A CATALUNYA")
@@ -945,7 +1050,10 @@ if selected == "Catalunya":
                         st.metric(label="**Habitatges acabats unifamiliars**", value="Pendent")
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Qualificacions provisionals d'HPO**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Qualificacions provisionals d'HPO", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Qualificacions provisionals d'HPO", "var")}%""")
+                    try:
+                        st.metric(label="**Qualificacions provisionals d'HPO**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Qualificacions provisionals d'HPO", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Qualificacions provisionals d'HPO", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Qualificacions provisionals d'HPO**", value="Pendent")
                 with center:
                     try:
                         st.metric(label="**Qualificacions provisionals d'HPO** (Promotor públic)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Qualificacions provisionals d'HPO (Promotor públic)", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Qualificacions provisionals d'HPO (Promotor públic)", "var")}%""")
@@ -958,7 +1066,10 @@ if selected == "Catalunya":
                         st.metric(label="**Qualificacions provisionals d'HPO** (Promotor privat)", value="Pendent")
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Qualificacions definitives d'HPO**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Qualificacions definitives d'HPO", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Qualificacions definitives d'HPO", "var")}%""")
+                    try:
+                        st.metric(label="**Qualificacions definitives d'HPO**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Qualificacions definitives d'HPO", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Qualificacions definitives d'HPO", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Qualificacions definitives d'HPO**", value="Pendent")
                 with center:
                     try:
                         st.metric(label="**Qualificacions definitives d'HPO** (Promotor públic)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Qualificacions definitives d'HPO (Promotor públic)", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n),  "Qualificacions definitives d'HPO (Promotor públic)", "var")}%""")
@@ -999,7 +1110,6 @@ if selected == "Catalunya":
                     st.plotly_chart(stacked_bar_plotly(table_Catalunya_y, selected_columns_aux2, "Qualificacions definitives de protecció oficial segons tipus de promotor", "Nombre d'habitatges", 2014), use_container_width=True, responsive=True)
                     st.plotly_chart(area_plotly(table_Catalunya[selected_columns_fin], selected_columns_fin, "Habitatges acabats per tipologia", "Habitatges acabats", "2013T1"), use_container_width=True, responsive=True)
                     st.plotly_chart(area_plotly(table_Catalunya_uni, table_Catalunya_uni.columns.tolist(), "Habitatges iniciats unifamiliars per superfície construida", "Habitatges iniciats", "2014T1"), use_container_width=True, responsive=True)
-
             if selected_index=="Compravendes":
                 min_year=2014
                 st.subheader("COMPRAVENDES D'HABITATGES A CATALUNYA")
@@ -1008,11 +1118,20 @@ if selected == "Catalunya":
                 table_Catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha", "trvivt_Catalunya", "trvivs_Catalunya", "trvivn_Catalunya"], min_year, max_year,["Any", "Compravendes d'habitatge total", "Compravendes d'habitatge de segona mà", "Compravendes d'habitatge nou"])
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Compravendes d'habitatge total**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Compravendes d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Compravendes d'habitatge total", "var")}%""")
+                    try:
+                        st.metric(label="**Compravendes d'habitatge total**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Compravendes d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Compravendes d'habitatge total", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Compravendes d'habitatge total**", value="Pendent")
                 with center:
-                    st.metric(label="**Compravendes d'habitatge de segona mà**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Compravendes d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Compravendes d'habitatge de segona mà", "var")}%""")
+                    try:
+                        st.metric(label="**Compravendes d'habitatge de segona mà**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Compravendes d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Compravendes d'habitatge de segona mà", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Compravendes d'habitatge de segona mà**", value="Pendent")
                 with right:
-                    st.metric(label="**Compravendes d'habitatge nou**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Compravendes d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Compravendes d'habitatge nou", "var")}%""")
+                    try:
+                        st.metric(label="**Compravendes d'habitatge nou**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Compravendes d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Compravendes d'habitatge nou", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Compravendes d'habitatge nou**", value="Pendent")
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1036,11 +1155,20 @@ if selected == "Catalunya":
                 table_Catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha", "prvivt_Catalunya", "prvivs_Catalunya", "prvivn_Catalunya"], min_year, max_year,["Any", "Preu d'habitatge total", "Preus d'habitatge de segona mà", "Preus d'habitatge nou"])
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Preu d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Preu d'habitatge total", "var")}%""")
+                    try:
+                        st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Preu d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Preu d'habitatge total", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value="Pendent")  
                 with center:
-                    st.metric(label="**Preu d'habitatge de segona mà** (€/m\u00b2)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Preus d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Preus d'habitatge de segona mà", "var")}%""")
+                    try:
+                        st.metric(label="**Preu d'habitatge de segona mà** (€/m\u00b2)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Preus d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Preus d'habitatge de segona mà", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Preu d'habitatge de segona mà** (€/m\u00b2)", value="Pendent")  
                 with right:
-                    st.metric(label="**Preu d'habitatge nou** (€/m\u00b2)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Preus d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Preus d'habitatge nou", "var")}%""")
+                    try:
+                        st.metric(label="**Preu d'habitatge nou** (€/m\u00b2)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Preus d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Preus d'habitatge nou", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Preu d'habitatge nou** (€/m\u00b2)", value="Pendent")  
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1064,11 +1192,20 @@ if selected == "Catalunya":
                 table_Catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha", "supert_Catalunya", "supers_Catalunya", "supern_Catalunya"], min_year, max_year,["Any", "Superfície mitjana total", "Superfície mitjana d'habitatge de segona mà", "Superfície mitjana d'habitatge nou"])
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Superfície mitjana** (m\u00b2)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Superfície mitjana total", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Superfície mitjana total", "var")}%""")
+                    try:
+                        st.metric(label="**Superfície mitjana** (m\u00b2)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Superfície mitjana total", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Superfície mitjana total", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Superfície mitjana** (m\u00b2)", value="Pendent")  
                 with center:
-                    st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "var")}%""")
+                    try:
+                        st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value="Pendent")  
                 with right:
-                    st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Superfície mitjana d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Superfície mitjana d'habitatge nou", "var")}%""")                
+                    try:
+                        st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Superfície mitjana d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Superfície mitjana d'habitatge nou", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value="Pendent")   
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1086,16 +1223,21 @@ if selected == "Catalunya":
                     st.plotly_chart(bar_plotly(table_Catalunya_y, table_Catalunya.columns.tolist(), "Evolució anual de la superfície mitjana per tipologia d'habitatge", "m\u00b2 construïts", 2014), use_container_width=True, responsive=True)   
         if selected_type=="Lloguer":
             st.subheader("MERCAT DE LLOGUER")
-            selected_year_n = st.sidebar.selectbox("****Selecciona un any:****", available_years, available_years.index(index_year))
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2014
             table_Catalunya = tidy_Catalunya(DT_terr, ["Fecha", "trvivalq_Catalunya", "pmvivalq_Catalunya"], f"{str(min_year)}-01-01", max_trim_lloguer,["Data", "Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
             table_Catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha", "trvivalq_Catalunya",  "pmvivalq_Catalunya"], min_year, max_year,["Any", "Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
             left_col, right_col = st.columns((1,1))
             with left_col:
-                st.metric(label="**Nombre de contractes de lloguer**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Nombre de contractes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Nombre de contractes de lloguer", "var")}%""")
+                try:
+                    st.metric(label="**Nombre de contractes de lloguer**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Nombre de contractes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Nombre de contractes de lloguer", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Nombre de contractes de lloguer**", value="Pendent")
             with right_col:
-                st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Rendes mitjanes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Rendes mitjanes de lloguer", "var")}%""")
+                try:
+                    st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Rendes mitjanes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Rendes mitjanes de lloguer", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value="Pendent")
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1114,19 +1256,23 @@ if selected == "Catalunya":
                 st.plotly_chart(bar_plotly(table_Catalunya_y, ["Rendes mitjanes de lloguer"], "Evolució anual de les rendes mitjanes de lloguer a Catalunya", "€/mes", 2005), use_container_width=True, responsive=True)   
                 st.plotly_chart(bar_plotly(table_Catalunya_y, ["Nombre de contractes de lloguer"], "Evolució anual dels contractes registrats d'habitatges en lloguer a Catalunya", "Nombre de contractes de lloguer", 2005), use_container_width=True, responsive=True)  
 if selected == "Províncies i àmbits":
-    st.sidebar.header("**PROVÍNCIES I ÀMBITS TERRITORIALS DE CATALUNYA**")
-    selected_type = st.sidebar.radio("**Mercat de venda o lloguer**", ("Venda", "Lloguer"))
-    selected_option = st.sidebar.radio("**Selecciona un tipus d'àrea geogràfica:**", ["Províncies", "Àmbits territorials"])
-    if selected_type=="Venda":
-        st.sidebar.header("")
-        prov_names = ["Barcelona", "Girona", "Tarragona", "Lleida"]
-        ambit_names = ["Alt Pirineu i Aran","Camp de Tarragona","Comarques centrals","Comarques gironines","Metropolità","Penedès","Ponent","Terres de l'Ebre"]
-        ambit_names_aux = ["Alt Pirineu i Aran","Camp de Tarragona","Comarques Centrals","Comarques Gironines","Metropolità","Penedès","Ponent","Terres de l'Ebre"]
+    prov_names = ["Barcelona", "Girona", "Tarragona", "Lleida"]
+    ambit_names = ["Alt Pirineu i Aran","Camp de Tarragona","Comarques centrals","Comarques gironines","Metropolità","Penedès","Ponent","Terres de l'Ebre"]
+    left, center, right= st.columns((1,1,1))
+    with left:
+        selected_type = st.radio("**Mercat de venda o lloguer**", ("Venda", "Lloguer"), horizontal=True, key=400)
+        selected_option = st.radio("**Selecciona un tipus d'àrea geogràfica:**", ["Províncies", "Àmbits territorials"], key=401)
+    with center:
+        if selected_option=="Províncies":
+            selected_geo = st.selectbox('**Selecciona una província:**', prov_names, index= prov_names.index("Barcelona"))
         if selected_option=="Àmbits territorials":
-            selected_geo = st.sidebar.selectbox('**Selecciona un àmbit territorial:**', ambit_names, index= ambit_names.index("Metropolità"))
-            index_indicator = ["Producció", "Compravendes", "Preus", "Superfície"]
-            selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", index_indicator)
-            selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year))
+            selected_geo = st.selectbox('**Selecciona un àmbit territorial:**', ambit_names, index= ambit_names.index("Metropolità"), key=402)
+        if selected_type=="Venda":
+            selected_index = st.selectbox("**Selecciona un indicador:**", ["Producció", "Compravendes", "Preus", "Superfície"], key=403)
+    with right:
+        selected_year_n = st.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year), key=404)
+    if selected_type=="Venda":
+        if selected_option=="Àmbits territorials":
             if selected_index=="Producció":
                 min_year=2008
                 st.subheader(f"PRODUCCIÓ D'HABITATGES A L'ÀMBIT: {selected_geo.upper()}")
@@ -1137,18 +1283,36 @@ if selected == "Províncies i àmbits":
                 table_province_uni = tidy_Catalunya(DT_terr, ["Fecha"] + concatenate_lists(["iniviv_uni_50m2_","iniviv_uni_5175m2_", "iniviv_uni_76100m2_","iniviv_uni_101125m2_", "iniviv_uni_126150m2_", "iniviv_uni_150m2_"], selected_geo), f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Unifamiliar fins a 50m2","Unifamiliar entre 51m2 i 75 m2", "Unifamiliar entre 76m2 i 100m2","Unifamiliar entre 101m2 i 125m2", "Unifamiliar entre 126m2 i 150m2", "Unifamiliar de més de 150m2"])
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Habitatges iniciats**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges iniciats", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges iniciats", "var")}%""")
+                    try:
+                        st.metric(label="**Habitatges iniciats**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges iniciats", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges iniciats", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Habitatges iniciats**", value="Pendent")
                 with center:
-                    st.metric(label="**Habitatges iniciats plurifamiliars**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges iniciats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges iniciats plurifamiliars", "var")}%""")
+                    try:
+                        st.metric(label="**Habitatges iniciats plurifamiliars**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges iniciats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges iniciats plurifamiliars", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Habitatges iniciats plurifamiliars**", value="Pendent")
                 with right:
-                    st.metric(label="**Habitatges iniciats unifamiliars**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges iniciats unifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges iniciats unifamiliars", "var")}%""")
+                    try:
+                        st.metric(label="**Habitatges iniciats unifamiliars**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges iniciats unifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges iniciats unifamiliars", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Habitatges iniciats unifamiliars**", value="Pendent")
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Habitatges acabats**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats", "var")}%""")
+                    try:
+                        st.metric(label="**Habitatges acabats**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Habitatges acabats**", value="Pendent")
                 with center:
-                    st.metric(label="**Habitatges acabats plurifamiliars**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats plurifamiliars", "var")}%""")
+                    try:
+                        st.metric(label="**Habitatges acabats plurifamiliars**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats plurifamiliars", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Habitatges acabats plurifamiliars**", value="Pendent")
                 with right:
-                    st.metric(label="**Habitatges acabats unifamiliars**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats unifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats unifamiliars", "var")}%""")
+                    try:
+                        st.metric(label="**Habitatges acabats unifamiliars**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats unifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats unifamiliars", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Habitatges acabats unifamiliars**", value="Pendent")
                 selected_columns_ini = [col for col in table_province.columns.tolist() if col.startswith("Habitatges iniciats ")]
                 selected_columns_fin = [col for col in table_province.columns.tolist() if col.startswith("Habitatges acabats ")]
                 selected_columns_aux = ["Habitatges iniciats", "Habitatges acabats"]
@@ -1180,11 +1344,20 @@ if selected == "Províncies i àmbits":
                 table_province_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha"] + concatenate_lists(["trvivt_", "trvivs_", "trvivn_"], selected_geo), min_year, max_year,["Any", "Compravendes d'habitatge total", "Compravendes d'habitatge de segona mà", "Compravendes d'habitatge nou"])
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Compravendes d'habitatge total**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge total", "var")}%""")
+                    try:
+                        st.metric(label="**Compravendes d'habitatge total**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge total", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Compravendes d'habitatge total**", value="Pendent")
                 with center:
-                    st.metric(label="**Compravendes d'habitatge de segona mà**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge de segona mà", "var")}%""")
+                    try:
+                        st.metric(label="**Compravendes d'habitatge de segona mà**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge de segona mà", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Compravendes d'habitatge de segona mà**", value="Pendent")
                 with right:
-                    st.metric(label="**Compravendes d'habitatge nou**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge nou", "var")}%""") 
+                    try:
+                        st.metric(label="**Compravendes d'habitatge nou**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge nou", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Compravendes d'habitatge nou**", value="Pendent")
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1209,11 +1382,20 @@ if selected == "Províncies i àmbits":
                 table_province_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha"] + concatenate_lists(["prvivt_", "prvivs_", "prvivn_"], selected_geo), min_year, max_year,["Any", "Preu d'habitatge total", "Preus d'habitatge de segona mà", "Preus d'habitatge nou"])
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preu d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preu d'habitatge total", "var")}%""")
+                    try:
+                        st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preu d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preu d'habitatge total", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value="Pendent")
                 with center:
-                    st.metric(label="**Preus d'habitatge de segona mà** (€/m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge de segona mà", "var")}%""")
+                    try:
+                        st.metric(label="**Preus d'habitatge de segona mà** (€/m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge de segona mà", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Preus d'habitatge de segona mà** (€/m\u00b2)", value="Pendent")
                 with right:
-                    st.metric(label="**Preus d'habitatge nou** (€/m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge nou", "var")}%""") 
+                    try:
+                        st.metric(label="**Preus d'habitatge nou** (€/m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge nou", "var")}%""") 
+                    except IndexError:
+                        st.metric(label="**Preus d'habitatge nou** (€/m\u00b2)", value="Pendent")
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1238,11 +1420,20 @@ if selected == "Províncies i àmbits":
                 table_province_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha"]  + concatenate_lists(["supert_", "supers_", "supern_"], selected_geo), min_year, max_year,["Any","Superfície mitjana total", "Superfície mitjana d'habitatge de segona mà", "Superfície mitjana d'habitatge nou"])
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Superfície mitjana** (m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana total", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana total", "var")}%""")
+                    try:
+                        st.metric(label="**Superfície mitjana** (m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana total", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana total", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Superfície mitjana** (m\u00b2)", value="Pendent")
                 with center:
-                    st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "var")}%""")
+                    try:
+                        st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value="Pendent")
                 with right:
-                    st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge nou", "var")}%""") 
+                    try:
+                        st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge nou", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value="Pendent")
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1259,10 +1450,6 @@ if selected == "Províncies i àmbits":
                 with right_col:
                     st.plotly_chart(bar_plotly(table_province_y, table_province.columns.tolist(), "Evolució anual de la superfície mitjana en m\u00b2 construïts per tipologia d'habitatge", "m\u00b2 construït", 2005), use_container_width=True, responsive=True) 
         if selected_option=="Províncies":
-            selected_geo = st.sidebar.selectbox('**Selecciona una província:**', prov_names, index= prov_names.index("Barcelona"))
-            index_indicator = ["Producció", "Compravendes", "Preus", "Superfície"]
-            selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", index_indicator)
-            selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year))
             if selected_index=="Producció":
                 min_year=2008
                 st.subheader(f"PRODUCCIÓ D'HABITATGES A {selected_geo.upper()}")
@@ -1274,7 +1461,10 @@ if selected == "Províncies i àmbits":
                 table_province_uni = tidy_Catalunya(DT_terr, ["Fecha"] + concatenate_lists(["iniviv_uni_50m2_","iniviv_uni_5175m2_", "iniviv_uni_76100m2_","iniviv_uni_101125m2_", "iniviv_uni_126150m2_", "iniviv_uni_150m2_"], selected_geo), f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Unifamiliar fins a 50m2","Unifamiliar entre 51m2 i 75 m2", "Unifamiliar entre 76m2 i 100m2","Unifamiliar entre 101m2 i 125m2", "Unifamiliar entre 126m2 i 150m2", "Unifamiliar de més de 150m2"])
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Habitatges iniciats**", value=f"""{indicator_year(table_province_y, table_province_m, str(selected_year_n), "Habitatges iniciats", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province_m, str(selected_year_n), "Habitatges iniciats", "var", "month")}%""")                
+                    try:
+                        st.metric(label="**Habitatges iniciats**", value=f"""{indicator_year(table_province_y, table_province_m, str(selected_year_n), "Habitatges iniciats", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province_m, str(selected_year_n), "Habitatges iniciats", "var", "month")}%""")
+                    except IndexError:
+                        st.metric(label="**Habitatges iniciats**", value="Pendent")          
                 with center:
                     try:
                         st.metric(label="**Habitatges iniciats plurifamiliars**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges iniciats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges iniciats plurifamiliars", "var")}%""")
@@ -1287,7 +1477,10 @@ if selected == "Províncies i àmbits":
                         st.metric(label="**Habitatges iniciats unifamiliars**", value="Pendent")
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Habitatges acabats**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province_m, str(selected_year_n), "Habitatges acabats", "var", "month")}%""")
+                    try:
+                        st.metric(label="**Habitatges acabats**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province_m, str(selected_year_n), "Habitatges acabats", "var", "month")}%""")
+                    except IndexError:
+                        st.metric(label="**Habitatges acabats**", value="Pendent")      
                 with center:
                     try:
                         st.metric(label="**Habitatges acabats plurifamiliars**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats plurifamiliars", "var")}%""")
@@ -1330,11 +1523,20 @@ if selected == "Províncies i àmbits":
                 table_province_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha"]  + concatenate_lists(["trvivt_", "trvivs_", "trvivn_"], selected_geo), min_year, max_year,["Any","Compravendes d'habitatge total", "Compravendes d'habitatge de segona mà", "Compravendes d'habitatge nou"])
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Compravendes d'habitatge total**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge total", "var")}%""")
+                    try:
+                        st.metric(label="**Compravendes d'habitatge total**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge total", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Compravendes d'habitatge total**", value="Pendent")
                 with center:
-                    st.metric(label="**Compravendes d'habitatge de segona mà**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge de segona mà", "var")}%""")
+                    try:
+                        st.metric(label="**Compravendes d'habitatge de segona mà**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge de segona mà", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Compravendes d'habitatge de segona mà**", value="Pendent")
                 with right:
-                    st.metric(label="**Compravendes d'habitatge nou**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge nou", "var")}%""") 
+                    try:
+                        st.metric(label="**Compravendes d'habitatge nou**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Compravendes d'habitatge nou", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Compravendes d'habitatge nou**", value="Pendent")
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1359,11 +1561,20 @@ if selected == "Províncies i àmbits":
                 table_province_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha"]  + concatenate_lists(["prvivt_", "prvivs_", "prvivn_"], selected_geo), min_year, max_year,["Any","Preu d'habitatge total", "Preus d'habitatge de segona mà", "Preus d'habitatge nou"])
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preu d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preu d'habitatge total", "var")}%""")
+                    try:
+                        st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preu d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preu d'habitatge total", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value="Pendent")
                 with center:
-                    st.metric(label="**Preus d'habitatge de segona mà** (€/m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge de segona mà", "var")}%""")
+                    try:
+                        st.metric(label="**Preus d'habitatge de segona mà** (€/m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge de segona mà", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Preus d'habitatge de segona mà** (€/m\u00b2)", value="Pendent")
                 with right:
-                    st.metric(label="**Preus d'habitatge nou** (€/m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge nou", "var")}%""") 
+                    try:
+                        st.metric(label="**Preus d'habitatge nou** (€/m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Preus d'habitatge nou", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Preus d'habitatge nou** (€/m\u00b2)", value="Pendent")
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1388,11 +1599,20 @@ if selected == "Províncies i àmbits":
                 table_province_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha"]  + concatenate_lists(["supert_", "supers_", "supern_"], selected_geo), min_year, max_year,["Any","Superfície mitjana total", "Superfície mitjana d'habitatge de segona mà", "Superfície mitjana d'habitatge nou"])
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Superfície mitjana** (m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana total", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana total", "var")}%""")
+                    try:
+                        st.metric(label="**Superfície mitjana** (m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana total", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana total", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Superfície mitjana** (m\u00b2)", value="Pendent")
                 with center:
-                    st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "var")}%""")
+                    try:
+                        st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value="Pendent")
                 with right:
-                    st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge nou", "var")}%""") 
+                    try:
+                        st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Superfície mitjana d'habitatge nou", "var")}%""")
+                    except IndexError:
+                        st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value="Pendent")
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1410,22 +1630,23 @@ if selected == "Províncies i àmbits":
                     st.plotly_chart(bar_plotly(table_province_y, table_province.columns.tolist(), "Evolució anual de la superfície mitjana per tipologia d'habitatge", "m\u00b2 construït", 2005), use_container_width=True, responsive=True)
 
     if selected_type=="Lloguer":
-        st.sidebar.header("")
-        prov_names = ["Barcelona", "Girona", "Tarragona", "Lleida"]
-        ambit_names = ["Alt Pirineu i Aran","Camp de Tarragona","Comarques centrals","Comarques gironines","Metropolità","Penedès","Ponent","Terres de l'Ebre"]
         if selected_option=="Àmbits territorials":
-            selected_geo = st.sidebar.selectbox('**Selecciona un àmbit territorial:**', ambit_names, index= ambit_names.index("Metropolità"))
             min_year=2014
-            selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year))
             st.subheader(f"MERCAT DE LLOGUER A L'ÀMBIT: {selected_geo.upper()}")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             table_province = tidy_Catalunya(DT_terr, ["Fecha"] + concatenate_lists(["trvivalq_", "pmvivalq_"], selected_geo), f"{str(min_year)}-01-01", max_trim_lloguer,["Data", "Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
             table_province_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha"]  + concatenate_lists(["trvivalq_", "pmvivalq_"], selected_geo), min_year, max_year,["Any","Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
             left_col, right_col = st.columns((1,1))
             with left_col:
-                st.metric(label="**Nombre de contractes de lloguer**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Nombre de contractes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Nombre de contractes de lloguer", "var")}%""")
+                try:
+                    st.metric(label="**Nombre de contractes de lloguer**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Nombre de contractes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Nombre de contractes de lloguer", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Nombre de contractes de lloguer**", value="Pendent")
             with right_col:
-                st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Rendes mitjanes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Rendes mitjanes de lloguer", "var")}%""")
+                try:
+                    st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Rendes mitjanes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Rendes mitjanes de lloguer", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value="Pendent")
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1444,18 +1665,22 @@ if selected == "Províncies i àmbits":
                 st.plotly_chart(bar_plotly(table_province_y, ["Rendes mitjanes de lloguer"], "Evolució anual de les rendes mitjanes de lloguer", "€/mes", 2005), use_container_width=True, responsive=True)
                 st.plotly_chart(bar_plotly(table_province_y, ["Nombre de contractes de lloguer"], "Evolució anual dels contractes registrats d'habitatges en lloguer", "Nombre de contractes", 2005), use_container_width=True, responsive=True)
         if selected_option=="Províncies":
-            selected_geo = st.sidebar.selectbox('**Selecciona una província:**', prov_names, index= prov_names.index("Barcelona"))
             min_year=2014
-            selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year))
             st.subheader(f"MERCAT DE LLOGUER A {selected_geo.upper()}")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             table_province = tidy_Catalunya(DT_terr, ["Fecha"] + concatenate_lists(["trvivalq_", "pmvivalq_"], selected_geo), f"{str(min_year)}-01-01", max_trim_lloguer,["Data", "Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
             table_province_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha"]  + concatenate_lists(["trvivalq_", "pmvivalq_"], selected_geo), min_year, max_year,["Any","Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
             left_col, right_col = st.columns((1,1))
             with left_col:
-                st.metric(label="**Nombre de contractes de lloguer**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Nombre de contractes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Nombre de contractes de lloguer", "var")}%""")
+                try:
+                    st.metric(label="**Nombre de contractes de lloguer**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Nombre de contractes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Nombre de contractes de lloguer", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Nombre de contractes de lloguer**", value="Pendent")
             with right_col:
-                st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Rendes mitjanes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Rendes mitjanes de lloguer", "var")}%""")
+                try:
+                    st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Rendes mitjanes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Rendes mitjanes de lloguer", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value="Pendent")
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1475,13 +1700,16 @@ if selected == "Províncies i àmbits":
                 st.plotly_chart(bar_plotly(table_province_y, ["Nombre de contractes de lloguer"], "Evolució anual dels contractes registrats d'habitatges en lloguer", "Nombre de contractes", 2005), use_container_width=True, responsive=True)
 
 if selected=="Comarques":
-    st.sidebar.header("**COMARQUES DE CATALUNYA**")
-    selected_type = st.sidebar.radio("**Mercat de venda o lloguer**", ("Venda", "Lloguer"))
+    left, center, right= st.columns((1,1,1))
+    with left:
+        selected_type = st.radio("**Mercat de venda o lloguer**", ("Venda", "Lloguer"), horizontal=True, key=501)
+    with center:
+        selected_com = st.selectbox("**Selecciona una comarca:**", sorted(maestro_mun["Comarca"].unique().tolist()), index= sorted(maestro_mun["Comarca"].unique().tolist()).index("Barcelonès"), key=502)
+        if selected_type=="Venda":
+            selected_index = st.selectbox("**Selecciona un indicador:**", ["Producció", "Compravendes", "Preus", "Superfície"], key=503)
+    with right:
+        selected_year_n = st.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year), key=504)
     if selected_type=="Venda":
-        selected_com = st.sidebar.selectbox("**Selecciona una comarca:**", sorted(maestro_mun["Comarca"].unique().tolist()), index= sorted(maestro_mun["Comarca"].unique().tolist()).index("Barcelonès"))
-        index_names = ["Producció", "Compravendes", "Preus", "Superfície"]
-        selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", index_names)
-        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year))
         if selected_index=="Producció":
             min_year=2008
             st.subheader(f"PRODUCCIÓ D'HABITATGES A LA COMARCA: {selected_com.upper()}")
@@ -1554,14 +1782,21 @@ if selected=="Comarques":
             table_com_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha"] + concatenate_lists(["trvivt_", "trvivs_", "trvivn_"], selected_com), min_year, max_year,["Any","Compravendes d'habitatge total", "Compravendes d'habitatge de segona mà", "Compravendes d'habitatge nou"])
             left, center, right = st.columns((1,1,1))
             with left:
-                st.metric(label="**Compravendes d'habitatge total**", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Compravendes d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Compravendes d'habitatge total", "var")}%""")
+                try:
+                    st.metric(label="**Compravendes d'habitatge total**", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Compravendes d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Compravendes d'habitatge total", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Compravendes d'habitatge total**", value="Pendent")
+                
             with center:
-                st.metric(label="**Compravendes d'habitatge de segona mà**", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Compravendes d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Compravendes d'habitatge de segona mà", "var")}%""")
+                try:
+                    st.metric(label="**Compravendes d'habitatge de segona mà**", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Compravendes d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Compravendes d'habitatge de segona mà", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Compravendes d'habitatge de segona mà**", value="Pendent")
             with right:
                 try:
                     st.metric(label="**Compravendes d'habitatge nou**", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Compravendes d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Compravendes d'habitatge nou", "var")}%""") 
                 except IndexError:
-                    st.metric(label="**Compravendes d'habitatge nou**", value=0)
+                    st.metric(label="**Compravendes d'habitatge nou**", value="Pendent")
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1585,14 +1820,21 @@ if selected=="Comarques":
             table_com_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha"] + concatenate_lists(["prvivt_", "prvivs_", "prvivn_"], selected_com), min_year, max_year,["Any","Preu d'habitatge total", "Preu d'habitatge de segona mà", "Preu d'habitatge nou"])
             left, center, right = st.columns((1,1,1))
             with left:
-                st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Preu d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Preu d'habitatge total", "var")}%""")
+                try:
+                    st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Preu d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Preu d'habitatge total", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value="Pendent")
+
             with center:
-                st.metric(label="**Preu d'habitatge de segona mà** (€/m\u00b2)", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Preu d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Preu d'habitatge de segona mà", "var")}%""")
+                try:
+                    st.metric(label="**Preu d'habitatge de segona mà** (€/m\u00b2)", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Preu d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Preu d'habitatge de segona mà", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Preu d'habitatge de segona mà** (€/m\u00b2)", value="Pendent")
             with right:
                 try:
                     st.metric(label="**Preu d'habitatge nou** (€/m\u00b2)", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Preu d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Preu d'habitatge nou", "var")}%""") 
                 except IndexError:
-                    st.metric(label="**Preu d'habitatge nou** (€/m\u00b2)", value=0)
+                    st.metric(label="**Preu d'habitatge nou** (€/m\u00b2)", value="Pendent")
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1616,14 +1858,20 @@ if selected=="Comarques":
             table_com_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha"] + concatenate_lists(["supert_", "supers_", "supern_"], selected_com), min_year, max_year,["Any","Superfície mitjana total", "Superfície mitjana d'habitatge de segona mà", "Superfície mitjana d'habitatge nou"])
             left, center, right = st.columns((1,1,1))
             with left:
-                st.metric(label="**Superfície mitjana** (m\u00b2)", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Superfície mitjana total", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Superfície mitjana total", "var")}%""")
+                try:
+                    st.metric(label="**Superfície mitjana** (m\u00b2)", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Superfície mitjana total", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Superfície mitjana total", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Superfície mitjana** (m\u00b2)", value="Pendent")
             with center:
-                st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "var")}%""")
+                try:
+                    st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value="Pendent")
             with right:
                 try:
                     st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Superfície mitjana d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Superfície mitjana d'habitatge nou", "var")}%""") 
                 except IndexError:
-                    st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value=0)
+                    st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value="Pendent")
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1641,8 +1889,6 @@ if selected=="Comarques":
             with right_col:
                 st.plotly_chart(bar_plotly(table_com_y, table_com.columns.tolist(), "Evolució anual de la superfície mitjana per tipologia d'habitatge", "m\u00b2 construït", 2005), use_container_width=True, responsive=True)
     if selected_type=="Lloguer":
-        selected_com = st.sidebar.selectbox("**Selecciona una comarca:**", sorted(maestro_mun["Comarca"].unique().tolist()), index= sorted(maestro_mun["Comarca"].unique().tolist()).index("Barcelonès"))
-        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year))
         min_year=2014
         st.subheader(f"MERCAT DE LLOGUER A LA COMARCA: {selected_com.upper()}")
         st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
@@ -1650,9 +1896,15 @@ if selected=="Comarques":
         table_province_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha"]  + concatenate_lists(["trvivalq_", "pmvivalq_"], selected_com), min_year, max_year,["Any","Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
         left_col, right_col = st.columns((1,1))
         with left_col:
-            st.metric(label="**Nombre de contractes de lloguer**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Nombre de contractes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Nombre de contractes de lloguer", "var")}%""")
+            try:
+                st.metric(label="**Nombre de contractes de lloguer**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Nombre de contractes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Nombre de contractes de lloguer", "var")}%""")
+            except IndexError:
+                st.metric(label="**Nombre de contractes de lloguer**", value="Pendent")
         with right_col:
-            st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Rendes mitjanes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Rendes mitjanes de lloguer", "var")}%""")
+            try:
+                st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Rendes mitjanes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Rendes mitjanes de lloguer", "var")}%""")
+            except IndexError:
+                st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value="Pendent")
         st.markdown("")
         st.markdown("")
         # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1671,13 +1923,17 @@ if selected=="Comarques":
             st.plotly_chart(bar_plotly(table_province_y, ["Rendes mitjanes de lloguer"], "Evolució anual de les rendes mitjanes de lloguer", "€/mes", 2005), use_container_width=True, responsive=True)
             st.plotly_chart(bar_plotly(table_province_y, ["Nombre de contractes de lloguer"], "Evolució anual del nombre de contractes de lloguer", "Nombre de contractes", 2005), use_container_width=True, responsive=True)
 if selected=="Municipis":
-    st.sidebar.header("**MUNICIPIS DE CATALUNYA**")
-    selected_type = st.sidebar.radio("**Mercat de venda o lloguer**", ("Venda", "Lloguer"))
+    left, center, right= st.columns((1,1,1))
+    with left:
+        selected_type = st.radio("**Selecciona un tipus d'indicador**", ("Venda", "Lloguer", "Demografia i parc d'habitatge"), key=601, horizontal=False)
+    with center:
+        selected_mun = st.selectbox("**Selecciona un municipi:**", maestro_mun[maestro_mun["ADD"]=="SI"]["Municipi"].unique(), index= maestro_mun[maestro_mun["ADD"]=="SI"]["Municipi"].tolist().index("Barcelona"), key=602)
+        if selected_type=="Venda":
+            selected_index = st.selectbox("**Selecciona un indicador:**", ["Producció", "Compravendes", "Preus", "Superfície"], key=603)
+    with right:
+        if (selected_type=="Venda") or (selected_type=="Lloguer"):
+            selected_year_n = st.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year), key=604)
     if selected_type=="Venda":
-        selected_mun = st.sidebar.selectbox("**Selecciona un municipi:**", maestro_mun[maestro_mun["ADD"]=="SI"]["Municipi"].unique(), index= maestro_mun[maestro_mun["ADD"]=="SI"]["Municipi"].tolist().index("Barcelona"))
-        index_names = ["Producció", "Compravendes", "Preus", "Superfície"]
-        selected_index = st.sidebar.selectbox("**Selecciona un indicador:**", index_names)
-        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year))
         if selected_index=="Producció":
             min_year=2008
             st.subheader(f"PRODUCCIÓ D'HABITATGES A {selected_mun.upper()}")
@@ -1691,33 +1947,33 @@ if selected=="Municipis":
                 try:
                     st.metric(label="**Habitatges iniciats**", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Habitatges iniciats", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Habitatges iniciats", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges iniciats**", value=0, delta="-100%")
+                    st.metric(label="**Habitatges iniciats**", value="Pendent")
             with center:
                 try:
                     st.metric(label="**Habitatges iniciats plurifamiliars**", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Habitatges iniciats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Habitatges iniciats plurifamiliars", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges iniciats plurifamiliars**", value=0, delta="-100%")
+                    st.metric(label="**Habitatges iniciats plurifamiliars**", value="Pendent")
             with right:
                 try:
                     st.metric(label="**Habitatges iniciats unifamiliars**", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Habitatges iniciats unifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Habitatges iniciats unifamiliars", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges iniciats unifamiliars**", value=0, delta="-100%")
+                    st.metric(label="**Habitatges iniciats unifamiliars**", value="Pendent")
             left, center, right = st.columns((1,1,1))
             with left:
                 try:
                     st.metric(label="**Habitatges acabats**", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Habitatges acabats", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Habitatges acabats", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges acabats**", value=0, delta="-100%")
+                    st.metric(label="**Habitatges acabats**", value="Pendent")
             with center:
                 try:
                     st.metric(label="**Habitatges acabats plurifamiliars**", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Habitatges acabats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Habitatges acabats plurifamiliars", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges acabats plurifamiliars**", value=0, delta="-100%")
+                    st.metric(label="**Habitatges acabats plurifamiliars**", value="Pendent")
             with right:
                 try:
                     st.metric(label="**Habitatges acabats unifamiliars**", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Habitatges acabats unifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Habitatges acabats unifamiliars", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges acabats unifamiliars**", value=0, delta="-100%")
+                    st.metric(label="**Habitatges acabats unifamiliars**", value="Pendent")
             selected_columns_ini = [col for col in table_mun.columns.tolist() if col.startswith("Habitatges iniciats ")]
             selected_columns_fin = [col for col in table_mun.columns.tolist() if col.startswith("Habitatges acabats ")]
             selected_columns_aux = ["Habitatges iniciats", "Habitatges acabats"]
@@ -1751,17 +2007,17 @@ if selected=="Municipis":
                 try:
                     st.metric(label="**Compravendes d'habitatge total**", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Compravendes d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Compravendes d'habitatge total", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Compravendes d'habitatge total**", value=0, delta="-100%")
+                    st.metric(label="**Compravendes d'habitatge total**", value="Pendent")
             with center:
                 try:
                     st.metric(label="**Compravendes d'habitatge de segona mà**", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Compravendes d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Compravendes d'habitatge de segona mà", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Compravendes d'habitatge de segona mà**", value=0, delta="-100%") 
+                    st.metric(label="**Compravendes d'habitatge de segona mà**", value="Pendent") 
             with right:
                 try:
                     st.metric(label="**Compravendes d'habitatge nou**", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Compravendes d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Compravendes d'habitatge nou", "var")}%""") 
                 except IndexError:
-                    st.metric(label="**Compravendes d'habitatge nou**", value=0, delta="-100%") 
+                    st.metric(label="**Compravendes d'habitatge nou**", value="Pendent") 
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1792,17 +2048,17 @@ if selected=="Municipis":
                 try:
                     st.metric(label="**Preu d'habitatge total** (€/m\u00b2 construït)", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Preu d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Preu d'habitatge total", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Preu d'habitatge total** (€/m\u00b2 construït)", value="n/a") 
+                    st.metric(label="**Preu d'habitatge total** (€/m\u00b2 construït)", value="Pendent") 
             with center:
                 try:
                     st.metric(label="**Preu d'habitatge de segona mà** (€/m\u00b2 construït)", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Preu d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Preu d'habitatge de segona mà", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Preu d'habitatge de segona mà** (€/m\u00b2 construït)", value="n/a") 
+                    st.metric(label="**Preu d'habitatge de segona mà** (€/m\u00b2 construït)", value="Pendent") 
             with right:
                 try:
                     st.metric(label="**Preu d'habitatge nou** (€/m\u00b2 construït)", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Preu d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Preu d'habitatge nou", "var")}%""") 
                 except IndexError:
-                    st.metric(label="**Preu d'habitatge nou** (€/m\u00b2 construït)", value="n/a") 
+                    st.metric(label="**Preu d'habitatge nou** (€/m\u00b2 construït)", value="Pendent") 
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1829,17 +2085,17 @@ if selected=="Municipis":
                 try:
                     st.metric(label="**Superfície mitjana** (m\u00b2)", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Superfície mitjana total", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Superfície mitjana total", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Superfície mitjana** (m\u00b2)", value="n/a")
+                    st.metric(label="**Superfície mitjana** (m\u00b2)", value="Pendent")
             with center:
                 try:
                     st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value="n/a")
+                    st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value="Pendent")
             with right:
                 try:
                     st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Superfície mitjana d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Superfície mitjana d'habitatge nou", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value="n/a")
+                    st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value="Pendent")
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1856,8 +2112,6 @@ if selected=="Municipis":
             with right_col:
                 st.plotly_chart(bar_plotly(table_mun_y, table_mun.columns.tolist(), "Evolució anual de la superfície mitjana per tipologia d'habitatge", "m\u00b2 útil", 2005), use_container_width=True, responsive=True)
     if selected_type=="Lloguer":
-        selected_mun = st.sidebar.selectbox("**Selecciona un municipi:**", maestro_mun[maestro_mun["ADD"]=="SI"]["Municipi"].unique(), index= maestro_mun[maestro_mun["ADD"]=="SI"]["Municipi"].tolist().index("Barcelona"))
-        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year))
         min_year=2014
         st.subheader(f"MERCAT DE LLOGUER A {selected_mun.upper()}")
         st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
@@ -1868,12 +2122,12 @@ if selected=="Municipis":
             try:
                 st.metric(label="**Nombre de contractes de lloguer**", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Nombre de contractes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Nombre de contractes de lloguer", "var")}%""")
             except IndexError:
-                st.metric(label="**Nombre de contractes de lloguer**", value="n/a")
+                st.metric(label="**Nombre de contractes de lloguer**", value="Pendent")
         with right_col:
             try:
                 st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Rendes mitjanes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_mun_y, table_mun, str(selected_year_n), "Rendes mitjanes de lloguer", "var")}%""")
             except IndexError:
-                st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value="n/a")
+                st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value="Pendent")
                 st.markdown("")
         st.markdown("")
         # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1892,14 +2146,45 @@ if selected=="Municipis":
             st.plotly_chart(bar_plotly(table_mun_y, ["Rendes mitjanes de lloguer"], "Evolució anual de les rendes mitjanes de lloguer", "€/mes", 2005), use_container_width=True, responsive=True)
             st.plotly_chart(bar_plotly(table_mun_y, ["Nombre de contractes de lloguer"],  "Evolució anual del nombre de contractes de lloguer", "Nombre de contractes", 2005), use_container_width=True, responsive=True)
 
+    if selected_type=="Demografia i parc d'habitatge":
+        st.markdown('<div class="custom-box">DEMOGRAFIA Y RENDA (2021)</div>', unsafe_allow_html=True)
+        subset_tamaño_mun = censo_2021[censo_2021["Municipi"] == selected_mun][["1", "2", "3", "4", "5 o más"]]
+        subset_tamaño_mun_aux = subset_tamaño_mun.T.reset_index()
+        subset_tamaño_mun_aux.columns = ["Tamany", "Llars"]
+        left, right = st.columns((1,1))
+        with left:
+            st.metric("Tamany de la llar més freqüent", value=censo_2021[censo_2021["Municipi"]==selected_mun]["Tamaño_hogar_frecuente"].values[0])
+            st.metric("Proporció de població nacional", value=f"""{round(100 - censo_2021[censo_2021["Municipi"]==selected_mun]["Perc_extranjera"].values[0],1):,.0f}%""")
+            st.metric("Renda neta per llar", value=f"""{(rentaneta_mun["rentanetahogar_" + selected_mun].values[-1]):,.0f}""")
+        with right:
+            st.metric("Tamany mitjà de la llar", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Tamaño medio del hogar"].values[0],2)}""")
+            st.metric("Proporció de població estrangera", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Perc_extranjera"].values[0],1)}%""")
+            st.metric("Proporció de població amb educació superior", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Porc_Edu_superior"].values[0],1)}%""")
+
+        st.markdown("<div class='custom-box'>CARACTERÍSTIQUES DEL PARC D'HABITATGE (2021)</div>", unsafe_allow_html=True)
+        left, right = st.columns((1,1))
+        with left:
+            st.metric("Proporció d'habitatges en propietat", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Perc_propiedad"].values[0],1)}%""")
+            st.metric("Proporció d'habitatges principals", value=f"""{round(100 - censo_2021[censo_2021["Municipi"]==selected_mun]["Perc_noprincipales_y"].values[0],1)}%""")
+            st.metric("Edat mitjana dels habitatges", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Edad media"].values[0],1)}""")
+            st.plotly_chart(bar_plotly_demografia(rentaneta_mun.rename(columns={"Año":"Any"}).set_index("Any"), ["rentanetahogar_" + selected_mun], "Evolució anual de la renda mitjana neta", "€", 2015), use_container_width=True, responsive=True)
+        with right:
+            st.metric("Proporció d'habitatges en lloguer", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Perc_alquiler"].values[0], 1)}%""")
+            st.metric("Proporció d'habitatges no principals", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Perc_noprincipales_y"].values[0],1)}%""")
+            st.metric("Superfície mitjana dels habitatges", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Superficie media"].values[0],1)}""")
+            st.plotly_chart(donut_plotly_demografia(subset_tamaño_mun_aux,["Tamany", "Llars"], "Distribució del nombre de membres per llar", "Llars"), use_container_width=True, responsive=True)
 if selected=="Districtes de Barcelona":
-    st.sidebar.header("**DISTRICTES DE BARCELONA**")
-    selected_type = st.sidebar.radio("**Mercat de venda o lloguer**", ("Venda", "Lloguer"))
+    left, center, right= st.columns((1,1,1))
+    with left:
+        selected_type = st.radio("**Selecciona un tipus d'indicador**", ("Venda", "Lloguer", "Demografia i parc d'habitatge"), key=701, horizontal=False)
+    with center:
+        selected_dis = st.selectbox("**Selecciona un districte de Barcelona:**", maestro_dis["Districte"].unique(), key=702)
+        if selected_type=="Venda":
+            selected_index = st.selectbox("**Selecciona un indicador:**", ["Producció", "Compravendes", "Preus", "Superfície"], key=703)
+    with right:
+        if (selected_type=="Venda") or (selected_type=="Lloguer"):
+            selected_year_n = st.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year), key=704)
     if selected_type=="Venda":
-        selected_dis = st.sidebar.selectbox("**Selecciona un districte de Barcelona:**", maestro_dis["Districte"].unique())
-        index_names = ["Producció", "Compravendes", "Preus", "Superfície"]
-        selected_index = st.sidebar.selectbox("**Selecciona un indicador**", index_names)
-        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year))
         if selected_index=="Producció":
             min_year=2011
             st.subheader(f"PRODUCCIÓ D'HABITATGES A {selected_dis.upper()}")
@@ -1913,32 +2198,32 @@ if selected=="Districtes de Barcelona":
                 try:
                     st.metric(label="**Habitatges iniciats**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges iniciats", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges iniciats", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges iniciats**", value=0, delta="-100%")
+                    st.metric(label="**Habitatges iniciats**", value="0")
             with center:
                 try:
                     st.metric(label="**Habitatges iniciats plurifamiliars**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges iniciats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges iniciats plurifamiliars", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges iniciats plurifamiliars**", value=0, delta="N/A")
+                    st.metric(label="**Habitatges iniciats plurifamiliars**", value="Pendent")
             with right:
                 try:
                     st.metric(label="**Habitatges iniciats unifamiliars**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges iniciats unifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges iniciats unifamiliars", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges iniciats plurifamiliars**", value=0, delta="N/A")
+                    st.metric(label="**Habitatges iniciats plurifamiliars**", value="Pendent")
             with left:
                 try:
                     st.metric(label="**Habitatges acabats**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges acabats", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges acabats", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges acabats**", value=0, delta="-100%")
+                    st.metric(label="**Habitatges acabats**", value="0")
             with center:
                 try:
                     st.metric(label="**Habitatges acabats plurifamiliars**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges acabats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges acabats plurifamiliars", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges acabats plurifamiliars**", value=0, delta="N/A")           
+                    st.metric(label="**Habitatges acabats plurifamiliars**", value="Pendent")           
             with right:
                 try:
                     st.metric(label="**Habitatges acabats unifamiliars**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges acabats unifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges acabats unifamiliars", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges acabats unifamiliars**", value=0, delta="N/A")
+                    st.metric(label="**Habitatges acabats unifamiliars**", value="Pendent")
             selected_columns_ini = [col for col in table_dis.columns.tolist() if col.startswith("Habitatges iniciats ")]
             selected_columns_fin = [col for col in table_dis.columns.tolist() if col.startswith("Habitatges acabats ")]
             selected_columns_aux = ["Habitatges iniciats", "Habitatges acabats"]
@@ -1967,11 +2252,20 @@ if selected=="Districtes de Barcelona":
             table_dis_y = tidy_Catalunya_anual(DT_dis_y, ["Fecha"] + concatenate_lists(["trvivt_", "trvivs_", "trvivn_"], selected_dis), min_year, max_year,["Any","Compravendes d'habitatge total", "Compravendes d'habitatge de segona mà", "Compravendes d'habitatge nou"])
             left, center, right = st.columns((1,1,1))
             with left:
-                st.metric(label="**Compravendes d'habitatge total**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Compravendes d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Compravendes d'habitatge total", "var")}%""")
+                try:
+                    st.metric(label="**Compravendes d'habitatge total**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Compravendes d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Compravendes d'habitatge total", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Compravendes d'habitatge total**", value="Pendent")
             with center:
-                st.metric(label="**Compravendes d'habitatge de segona mà**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Compravendes d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Compravendes d'habitatge de segona mà", "var")}%""")
+                try:
+                    st.metric(label="**Compravendes d'habitatge de segona mà**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Compravendes d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Compravendes d'habitatge de segona mà", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Compravendes d'habitatge total**", value="Pendent")
             with right:
-                st.metric(label="**Compravendes d'habitatge nou**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Compravendes d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Compravendes d'habitatge nou", "var")}%""") 
+                try:
+                    st.metric(label="**Compravendes d'habitatge nou**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Compravendes d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Compravendes d'habitatge nou", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Compravendes d'habitatge total**", value="Pendent")
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -1995,11 +2289,20 @@ if selected=="Districtes de Barcelona":
             table_dis_y = tidy_Catalunya_anual(DT_dis_y, ["Fecha"] + concatenate_lists(["prvivt_", "prvivs_", "prvivn_"], selected_dis), min_year, max_year,["Any","Preu d'habitatge total", "Preu d'habitatge de segona mà", "Preu d'habitatge nou"])
             left, center, right = st.columns((1,1,1))
             with left:
-                st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Preu d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Preu d'habitatge total", "var")}%""")
+                try:
+                    st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Preu d'habitatge total", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Preu d'habitatge total", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Preu d'habitatge total** (€/m\u00b2)", value="Pendent")
             with center:
-                st.metric(label="**Preu d'habitatge de segona mà** (€/m\u00b2)", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Preu d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Preu d'habitatge de segona mà", "var")}%""")
+                try:
+                    st.metric(label="**Preu d'habitatge de segona mà** (€/m\u00b2)", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Preu d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Preu d'habitatge de segona mà", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Preu d'habitatge de segona mà** (€/m\u00b2)", value="Pendent")
             with right:
-                st.metric(label="**Preu d'habitatge nou** (€/m\u00b2)", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Preu d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Preu d'habitatge nou", "var")}%""") 
+                try:
+                    st.metric(label="**Preu d'habitatge nou** (€/m\u00b2)", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Preu d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Preu d'habitatge nou", "var")}%""") 
+                except IndexError:
+                    st.metric(label="**Preu d'habitatge nou** (€/m\u00b2)", value="Pendent")  
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -2023,11 +2326,20 @@ if selected=="Districtes de Barcelona":
             table_dis_y = tidy_Catalunya_anual(DT_dis_y, ["Fecha"] + concatenate_lists(["supert_", "supers_", "supern_"], selected_dis), min_year, max_year,["Any","Superfície mitjana total", "Superfície mitjana d'habitatge de segona mà", "Superfície mitjana d'habitatge nou"])
             left, center, right = st.columns((1,1,1))
             with left:
-                st.metric(label="**Superfície mitjana** (m\u00b2)", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Superfície mitjana total", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Superfície mitjana total", "var")}%""")
+                try:
+                    st.metric(label="**Superfície mitjana** (m\u00b2)", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Superfície mitjana total", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Superfície mitjana total", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Superfície mitjana** (m\u00b2)", value="Pendent")  
             with center:
-                st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "var")}%""")
+                try:
+                    st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Superfície mitjana d'habitatge de segona mà", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Superfície d'habitatges de segona mà** (m\u00b2)", value="Pendent")  
             with right:
-                st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Superfície mitjana d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Superfície mitjana d'habitatge nou", "var")}%""")
+                try:
+                    st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Superfície mitjana d'habitatge nou", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Superfície mitjana d'habitatge nou", "var")}%""")
+                except IndexError:
+                    st.metric(label="**Superfície d'habitatges nous** (m\u00b2)", value="Pendent")  
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -2044,18 +2356,22 @@ if selected=="Districtes de Barcelona":
             with right_col:
                 st.plotly_chart(bar_plotly(table_dis_y, table_dis.columns.tolist(), "Evolució anual de la superfície mitjana per tipologia d'habitatge", "m2 útil", 2017), use_container_width=True, responsive=True)
     if selected_type=="Lloguer":
-        selected_dis = st.sidebar.selectbox("**Selecciona un districte de Barcelona:**", maestro_dis["Districte"].unique())
         st.subheader(f"MERCAT DE LLOGUER A {selected_dis.upper()}")
-        selected_year_n = st.sidebar.selectbox("**Selecciona un any:**", available_years, available_years.index(index_year))
         st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
         min_year=2014
         table_dis = tidy_Catalunya(DT_dis, ["Fecha"] + concatenate_lists(["trvivalq_", "pmvivalq_"], selected_dis), f"{str(min_year)}-01-01", max_trim_lloguer,["Data", "Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
         table_dis_y = tidy_Catalunya_anual(DT_dis_y, ["Fecha"] + concatenate_lists(["trvivalq_", "pmvivalq_"], selected_dis), min_year, max_year,["Any", "Nombre de contractes de lloguer", "Rendes mitjanes de lloguer"])
         left_col, right_col = st.columns((1,1))
         with left_col:
-            st.metric(label="**Nombre de contractes de lloguer**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Nombre de contractes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Nombre de contractes de lloguer", "var")}%""")
+            try:
+                st.metric(label="**Nombre de contractes de lloguer**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Nombre de contractes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Nombre de contractes de lloguer", "var")}%""")
+            except IndexError:
+                st.metric(label="**Nombre de contractes de lloguer**", value="Pendent")   
         with right_col:
-            st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Rendes mitjanes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Rendes mitjanes de lloguer", "var")}%""")
+            try:
+                st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Rendes mitjanes de lloguer", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Rendes mitjanes de lloguer", "var")}%""")
+            except IndexError:
+                st.metric(label="**Rendes mitjanes de lloguer** (€/mes)", value="Pendent")   
         st.markdown("")
         st.markdown("")
         # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -2073,6 +2389,52 @@ if selected=="Districtes de Barcelona":
         with right_col:
             st.plotly_chart(bar_plotly(table_dis_y, ["Rendes mitjanes de lloguer"], "Evolució anual de les rendes mitjanes de lloguer", "€/mes", 2005), use_container_width=True, responsive=True)
             st.plotly_chart(bar_plotly(table_dis_y, ["Nombre de contractes de lloguer"],  "Evolució anual del nombre de contractes de lloguer", "Nombre de contractes", 2005), use_container_width=True, responsive=True)
+
+    if selected_type=="Demografia i parc d'habitatge":
+        st.markdown(f'<div class="custom-box">DEMOGRAFIA Y RENDA (2021)</div>', unsafe_allow_html=True)
+        left, right = st.columns((1,1))
+        with left:
+            subset_tamaño_dis = censo_2021_dis[censo_2021_dis["Distrito"] == selected_dis][["1", "2", "3", "4", "5 o más"]]
+            subset_tamaño_dis_aux = subset_tamaño_dis.T.reset_index()
+            subset_tamaño_dis_aux.columns = ["Tamany", "Llars"]
+            max_column = subset_tamaño_dis.idxmax(axis=1).values[0]
+            st.metric("Tamany de la llar més freqüent", value=max_column)
+            st.metric("Proporció de població nacional", value=f"""{round(100 - censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Perc_extranjera"].values[0]*100,1)}%""")
+            st.metric("Renda neta per llar", value=f"""{(rentaneta_dis["rentahogar_" + selected_dis].values[-1]):,.0f}""")
+        with right:
+            st.metric("Tamany mitjà de la llar", value=f"""{censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Tamaño medio del hogar"].values[0]}""")
+            st.metric("Prorporció de població estrangera", value=f"""{round(censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Perc_extranjera"].values[0],1)*100}%""")
+            st.metric("Proporció de població amb educació superior", value=f"""{round(censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Perc_edusuperior"].values[0]*100,1)}%""")
+
+        st.markdown(f"<div class='custom-box'>CARACTERÍSTIQUES DEL PARC D'HABITATGE (2021)</div>", unsafe_allow_html=True)
+        left, right = st.columns((1,1))
+        with left:
+            st.metric("Proporció d'habitatges en propietat", value=f"""{round(censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Perc_propiedad"].values[0],1)}%""")
+            st.metric("Proporció d'habitatges principals", value=f"""{round(100 - censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Perc_noprincipales"].values[0],1)}%""")
+            st.metric("Edat mitjana dels habitatges", value=f"""{round(censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Edad media"].values[0],1)}""")
+            st.plotly_chart(bar_plotly_demografia(rentaneta_dis.rename(columns={"Año":"Any"}).set_index("Any"), ["rentahogar_" + selected_dis], "Evolución anual de la renta media neta anual", "€", 2015), use_container_width=True, responsive=True)
+        with right:
+            st.metric("Proporció d'habitatges en lloguer", value=f"""{round(censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Perc_alquiler"].values[0], 1)}%""")
+            st.metric("Proporció d'habitatges no principals", value=f"""{round(censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Perc_noprincipales"].values[0],1)}%""")
+            st.metric("Superfície mitjana dels habitatges", value=f"""{round(censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Superficie Media"].values[0],1)}""")
+            st.plotly_chart(donut_plotly_demografia(subset_tamaño_dis_aux,["Tamany", "Llars"], "Distribució del nombre de membres per llar", "Llars"), use_container_width=True, responsive=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # if selected=="Contacte":
 #     load_css_file(path + "main.css")
 #     CONTACT_EMAIL = "estudis@apcecat.cat"
