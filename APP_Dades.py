@@ -125,7 +125,7 @@ def import_data(trim_limit, month_limit):
 
     return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis])
 
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis = import_data("2024-04-01", "2024-05-01")
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis = import_data("2024-07-01", "2024-07-01")
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
@@ -180,7 +180,7 @@ def tidy_present_monthly(data_ori, columns_sel, year):
     output_data = data_ori[["Fecha"] + [columns_sel]]
     output_data["Any"] = output_data["Fecha"].dt.year
     output_data = output_data.drop_duplicates(["Fecha", columns_sel])
-    output_data = output_data.groupby("Any").sum().pct_change().mul(100).reset_index()
+    output_data = output_data.set_index("Fecha").groupby("Any").sum().pct_change().mul(100).reset_index()
     output_data = output_data[output_data["Any"]==int(year)].set_index("Any")
     return(output_data.values[0][0])
 
@@ -192,7 +192,7 @@ def tidy_present_monthly_aux(data_ori, columns_sel, year):
     output_data = output_data[(output_data["month_aux"]<=output_data['month_aux'].iloc[-1])]
     output_data["Any"] = output_data["Fecha"].dt.year
     output_data = output_data.drop_duplicates(["Fecha"] + columns_sel)
-    output_data = output_data.groupby("Any").sum().pct_change().mul(100).reset_index()
+    output_data = output_data.set_index("Fecha").groupby("Any").sum().pct_change().mul(100).reset_index()
     output_data = output_data[output_data["Any"]==int(year)].set_index("Any")
     return(output_data.values[0][0])
 
@@ -204,7 +204,7 @@ def tidy_present_monthly_diff(data_ori, columns_sel, year):
     output_data = output_data[(output_data["month_aux"]<=output_data['month_aux'].iloc[-1])]
     output_data["Any"] = output_data["Fecha"].dt.year
     output_data = output_data.drop_duplicates(["Fecha"] + columns_sel)
-    output_data = output_data.groupby("Any").mean().diff().mul(100).reset_index()
+    output_data = output_data.set_index("Fecha").groupby("Any").mean().diff().mul(100).reset_index()
     output_data = output_data[output_data["Any"]==int(year)].set_index("Any")
     return(output_data.values[0][0])
 
@@ -243,7 +243,7 @@ def concatenate_lists(list1, list2):
 
 def filedownload(df, filename):
     towrite = io.BytesIO()
-    df.to_excel(towrite, encoding='latin-1', index=True, header=True)
+    df.to_excel(towrite, index=True, header=True)
     towrite.seek(0)
     b64 = base64.b64encode(towrite.read()).decode("latin-1")
     href = f"""<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="{filename}">
@@ -255,7 +255,7 @@ def filedownload(df, filename):
 def line_plotly(table_n, selection_n, title_main, title_y, title_x="Trimestre", replace_0=False):
     plot_cat = table_n[selection_n]
     if replace_0==True:
-        plot_cat = plot_cat.replace(0, np.NaN)
+        plot_cat = plot_cat.replace(0, np.nan)
     colors = ['#2d538f', '#de7207', '#385723']
     traces = []
     for i, col in enumerate(plot_cat.columns):
@@ -457,7 +457,7 @@ def table_trim(data_ori, year_ini, rounded=False, formated=True):
     data_ori["Trimestre"] = data_ori["Trimestre"].str.split("T").str[1]
     data_ori["Trimestre"] = data_ori["Trimestre"] + "T"
     data_ori = data_ori[data_ori["Any"]>=str(year_ini)]
-    data_ori = data_ori.replace(0, np.NaN)
+    data_ori = data_ori.replace(0, np.nan)
     if rounded==True:
         numeric_columns = data_ori.select_dtypes(include=['float64', 'int64']).columns
         data_ori[numeric_columns] = data_ori[numeric_columns].applymap(lambda x: round(x, 1))
@@ -609,7 +609,7 @@ if selected == "Espanya":
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
             st.markdown(table_monthly(table_espanya_m[(table_espanya_m["Fecha"]>=f"{str(selected_year_n)}-01-01") & (table_espanya_m["Fecha"]<f"{str(selected_year_n+1)}-01-01")], selected_year_n).to_html(), unsafe_allow_html=True)
-            st.markdown(filedownload(table_monthly(table_espanya_m, 2023), f"{selected_index}_Espanya.xlsx"), unsafe_allow_html=True)
+            st.markdown(filedownload(table_monthly(table_espanya_m, 2024), f"{selected_index}_Espanya.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES ANUALS**")
@@ -922,7 +922,7 @@ if selected == "Catalunya":
             desc_bec = f'<div style="text-align: justify">{desc_bec_aux}</div>'
             st.markdown(desc_bec, unsafe_allow_html=True)
             st.markdown("")
-            st.markdown(f"""<a href="https://drive.google.com/file/d/1SQpuAJUjsBBS_UPQl6rCrfATcqW_lH-s/" target="_blank"><button class="download-button">Descarregar BEC</button></a>""", unsafe_allow_html=True)
+            st.markdown(f"""<a href="https://drive.google.com/file/d/1-5QkREGGzgd7YA8TzO7n4_brxe30eZ5g/" target="_blank"><button class="download-button">Descarregar BEC</button></a>""", unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
@@ -2038,7 +2038,7 @@ if selected=="Municipis":
             st.subheader(f"PREUS PER M\u00b2 CONSTRUÏT D'HABITATGE A {selected_mun.upper()}")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             table_mun = tidy_Catalunya(DT_mun, ["Fecha"] + concatenate_lists(["prvivt_", "prvivs_", "prvivn_"], selected_mun), f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Preu d'habitatge total", "Preu d'habitatge de segona mà", "Preu d'habitatge nou"])
-            table_mun = table_mun.replace(0, np.NaN)
+            table_mun = table_mun.replace(0, np.nan)
             table_mun_y = table_mun.reset_index().copy()
             table_mun_y["Any"] = table_mun_y["Trimestre"].str[:4]
             table_mun_y = table_mun_y.drop("Trimestre", axis=1)
