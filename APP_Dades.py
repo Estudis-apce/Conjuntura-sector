@@ -70,7 +70,8 @@ with right_col:
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
 max_trim_lloguer= "2024-04-01"
-
+date_max_hipo_aux = "2024-04-01"
+date_max_ciment_aux = "2024-04-01"
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def import_data(trim_limit, month_limit):
@@ -554,7 +555,7 @@ if selected == "Espanya":
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2008
             table_espanya_m = tidy_Catalunya_m(DT_monthly, ["Fecha"] + ["cons_ciment_Espanya"], f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Consum de ciment"])
-            table_espanya_q = tidy_Catalunya(DT_terr, ["Fecha","cons_ciment_Espanya"],  f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Consum de ciment"])
+            table_espanya_q = tidy_Catalunya(DT_terr, ["Fecha","cons_ciment_Espanya"],  f"{str(min_year)}-01-01", f"{date_max_ciment_aux}",["Data", "Consum de ciment"])
             table_espanya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","cons_ciment_Espanya"], min_year, max_year,["Any", "Consum de ciment"])
             table_espanya_q = table_espanya_q.dropna(axis=0)
             table_espanya_y = table_espanya_y.dropna(axis=0)
@@ -627,7 +628,7 @@ if selected == "Espanya":
             min_year=2008
             table_espanya_m = tidy_Catalunya_mensual(DT_monthly, ["Fecha", "hipon_Nacional", "hipoimp_Nacional"], f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data","Nombre d'hipoteques", "Import d'hipoteques"])
             table_espanya_m = table_espanya_m[["Data", "Nombre d'hipoteques", "Import d'hipoteques"]].rename(columns={"Data":"Fecha"})
-            table_espanya_q = tidy_Catalunya(DT_terr, ["Fecha", "hipon_Nacional", "hipoimp_Nacional"],  f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Nombre d'hipoteques", "Import d'hipoteques"])
+            table_espanya_q = tidy_Catalunya(DT_terr, ["Fecha", "hipon_Nacional", "hipoimp_Nacional"],  f"{str(min_year)}-01-01", f"{date_max_hipo_aux}",["Data", "Nombre d'hipoteques", "Import d'hipoteques"])
             table_espanya_q = table_espanya_q[["Nombre d'hipoteques", "Import d'hipoteques"]]
             table_espanya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","hipon_Nacional", "hipoimp_Nacional"], min_year, max_year,["Any", "Nombre d'hipoteques", "Import d'hipoteques"])
             table_espanya_y = table_espanya_y[["Nombre d'hipoteques", "Import d'hipoteques"]]
@@ -944,7 +945,7 @@ if selected == "Catalunya":
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2012
             table_catalunya_m = tidy_Catalunya_m(DT_monthly, ["Fecha"] + ["cons_ciment_Catalunya"], f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Consum de ciment"])
-            table_catalunya_q = tidy_Catalunya(DT_terr, ["Fecha","cons_ciment_Catalunya"],  f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Consum de ciment"])
+            table_catalunya_q = tidy_Catalunya(DT_terr, ["Fecha","cons_ciment_Catalunya"],  f"{str(min_year)}-01-01", f"{date_max_ciment_aux}",["Data", "Consum de ciment"])
             table_catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","cons_ciment_Catalunya"], min_year, max_year,["Any", "Consum de ciment"])
             table_catalunya_q = table_catalunya_q.dropna(axis=0)
             table_catalunya_y = table_catalunya_y.dropna(axis=0)
@@ -970,7 +971,7 @@ if selected == "Catalunya":
             min_year=2008
             table_catalunya_m = tidy_Catalunya_mensual(DT_monthly, ["Fecha", "hipon_Catalunya", "hipoimp_Catalunya"], f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data","Nombre d'hipoteques", "Import d'hipoteques"])
             table_catalunya_m = table_catalunya_m[["Data","Nombre d'hipoteques", "Import d'hipoteques"]].rename(columns={"Data":"Fecha"})
-            table_catalunya_q = tidy_Catalunya(DT_terr, ["Fecha", "hipon_Catalunya", "hipoimp_Catalunya"],  f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Nombre d'hipoteques", "Import d'hipoteques"])
+            table_catalunya_q = tidy_Catalunya(DT_terr, ["Fecha", "hipon_Catalunya", "hipoimp_Catalunya"],  f"{str(min_year)}-01-01", f"{date_max_hipo_aux}",["Data", "Nombre d'hipoteques", "Import d'hipoteques"])
             table_catalunya_q = table_catalunya_q[["Nombre d'hipoteques", "Import d'hipoteques"]]
             table_catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","hipon_Catalunya", "hipoimp_Catalunya"], min_year, max_year,["Any", "Nombre d'hipoteques", "Import d'hipoteques"])
             table_catalunya_y = table_catalunya_y[["Nombre d'hipoteques", "Import d'hipoteques"]]
