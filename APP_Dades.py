@@ -70,17 +70,22 @@ with right_col:
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
 max_trim_lloguer= "2024-04-01"
-date_max_hipo_aux = "2024-04-01"
-date_max_ciment_aux = "2024-04-01"
+date_max_hipo_aux = "2024-07-01"
+date_max_ciment_aux = "2024-05-01"
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def import_data(trim_limit, month_limit):
+    with open('Idescat.json', 'r') as outfile:
+        list_idescat_mun = [pd.DataFrame.from_dict(item) for item in json.loads(outfile.read())]
+        idescat_muns= list_idescat_mun[0].copy()
     with open('Censo2021.json', 'r') as outfile:
         list_censo = [pd.DataFrame.from_dict(item) for item in json.loads(outfile.read())]
     censo_2021= list_censo[0].copy()
+    censo_2021['Municipi'] = censo_2021['Municipi'].str.replace("L'", "l'", regex=False)
     rentaneta_mun= list_censo[1].copy()
     rentaneta_mun = rentaneta_mun.applymap(lambda x: x.replace(".", "") if isinstance(x, str) else x)
     rentaneta_mun = rentaneta_mun.apply(pd.to_numeric, errors='ignore')
+    rentaneta_mun.columns = rentaneta_mun.columns.str.replace("L'", "l'", regex=False)
     censo_2021_dis= list_censo[2].copy()
     rentaneta_dis = list_censo[3].copy()
     rentaneta_dis = rentaneta_dis.applymap(lambda x: x.replace(".", "") if isinstance(x, str) else x)
@@ -124,9 +129,9 @@ def import_data(trim_limit, month_limit):
     DT_mun_y_def = pd.merge(DT_mun_y_pre2, DT_mun_y_aux3, how="left", on="Fecha")    
     DT_mun_y_def = DT_mun_y_def[[col for col in DT_mun_y_def.columns if any(mun in col for mun in mun_list)]]
 
-    return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis])
+    return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns])
 
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis = import_data("2024-07-01", "2024-07-01")
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns = import_data("2024-07-01", "2024-08-01")
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
@@ -859,7 +864,7 @@ if selected == "Catalunya":
     with center:
         if selected_indicator=="Indicadors econòmics":
             selected_index = st.selectbox("**Selecciona un indicador:**", ["Costos de construcció", "Mercat laboral", "Consum de Ciment", "Hipoteques"], key=302)
-        if selected_indicator=="Sector residencial":
+        if (selected_indicator=="Sector residencial"):
             selected_index = st.selectbox("**Selecciona un indicador:**", ["Producció", "Compravendes", "Preus", "Superfície"], key=303)
         # if (selected_type=="Lloguer") and (selected_indicator=="Sector residencial"):
         #     st.write("")
@@ -1926,7 +1931,7 @@ if selected=="Comarques":
 if selected=="Municipis":
     left, center, right= st.columns((1,1,1))
     with left:
-        selected_type = st.radio("**Selecciona un tipus d'indicador**", ("Venda", "Lloguer", "Demografia i parc d'habitatge"), key=601, horizontal=False)
+        selected_type = st.radio("**Selecciona un tipus d'indicador**", ("Venda", "Lloguer", "Altres indicadors"), key=601, horizontal=False)
     with center:
         selected_mun = st.selectbox("**Selecciona un municipi:**", maestro_mun[maestro_mun["ADD"]=="SI"]["Municipi"].unique(), index= maestro_mun[maestro_mun["ADD"]=="SI"]["Municipi"].tolist().index("Barcelona"), key=602)
         if selected_type=="Venda":
@@ -2147,8 +2152,8 @@ if selected=="Municipis":
             st.plotly_chart(bar_plotly(table_mun_y, ["Rendes mitjanes de lloguer"], "Evolució anual de les rendes mitjanes de lloguer", "€/mes", 2005), use_container_width=True, responsive=True)
             st.plotly_chart(bar_plotly(table_mun_y, ["Nombre de contractes de lloguer"],  "Evolució anual del nombre de contractes de lloguer", "Nombre de contractes", 2005), use_container_width=True, responsive=True)
 
-    if selected_type=="Demografia i parc d'habitatge":
-        st.markdown('<div class="custom-box">DEMOGRAFIA Y RENDA (2021)</div>', unsafe_allow_html=True)
+    if selected_type=="Altres indicadors":
+        st.markdown('<div class="custom-box">DEMOGRAFIA (2021)</div>', unsafe_allow_html=True)
         subset_tamaño_mun = censo_2021[censo_2021["Municipi"] == selected_mun][["1", "2", "3", "4", "5 o más"]]
         subset_tamaño_mun_aux = subset_tamaño_mun.T.reset_index()
         subset_tamaño_mun_aux.columns = ["Tamany", "Llars"]
@@ -2156,24 +2161,49 @@ if selected=="Municipis":
         with left:
             st.metric("Tamany de la llar més freqüent", value=censo_2021[censo_2021["Municipi"]==selected_mun]["Tamaño_hogar_frecuente"].values[0])
             st.metric("Proporció de població nacional", value=f"""{round(100 - censo_2021[censo_2021["Municipi"]==selected_mun]["Perc_extranjera"].values[0],1):,.0f}%""")
-            st.metric("Renda neta per llar", value=f"""{(rentaneta_mun["rentanetahogar_" + selected_mun].values[-1]):,.0f}""")
+            st.metric("Població", value=f"""{int(DT_mun_y["poptott_"+ selected_mun].dropna().values[-1]):,.0f}""")
         with right:
             st.metric("Tamany mitjà de la llar", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Tamaño medio del hogar"].values[0],2)}""")
             st.metric("Proporció de població estrangera", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Perc_extranjera"].values[0],1)}%""")
             st.metric("Proporció de població amb educació superior", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Porc_Edu_superior"].values[0],1)}%""")
 
+
+
+        st.markdown("<div class='custom-box'>ECONOMIA I RENDA</div>", unsafe_allow_html=True)
+        left, right = st.columns((1,1))
+        with left:
+            st.metric("Renda neta per llar (2021)", value=f"""{(rentaneta_mun["rentanetahogar_" + selected_mun].values[-1]):,.0f}""")
+            st.metric("Nombre de pensionistes (" + str(idescat_muns[["Any", "Pensionistes_Total_" + selected_mun]].dropna()["Any"].values[0]) + ")", value=f"""{int(idescat_muns["Pensionistes_Total_" + selected_mun].dropna().values[0]):,.0f}""")
+            st.plotly_chart(bar_plotly_demografia(rentaneta_mun.rename(columns={"Año":"Any"}).set_index("Any"), ["rentanetahogar_" + selected_mun], "Evolució anual de la renda mitjana neta", "€", 2015), use_container_width=True, responsive=True)
+        with right:
+            st.metric("Base imposable general de l'IRPF (" + str(idescat_muns[["Any", "IRPF_Base_imposable_" + selected_mun]].dropna()["Any"].values[0]) + ")", value=f"""{int(idescat_muns["IRPF_Base_imposable_" + selected_mun].dropna().values[0]):,.0f}""")
+            st.metric("Quota integra del Impost sobre Bèns Immobles (IBI) (" + str(idescat_muns[["Any", "IBI_quota_" + selected_mun]].dropna()["Any"].values[0]) + ")", value=f"""{int(idescat_muns["IBI_quota_" + selected_mun].dropna().values[0]):,.0f}""")
+            st.plotly_chart(donut_plotly_demografia(subset_tamaño_mun_aux,["Tamany", "Llars"], "Distribució del nombre de membres per llar", "Llars"), use_container_width=True, responsive=True)
         st.markdown("<div class='custom-box'>CARACTERÍSTIQUES DEL PARC D'HABITATGE (2021)</div>", unsafe_allow_html=True)
         left, right = st.columns((1,1))
         with left:
             st.metric("Proporció d'habitatges en propietat", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Perc_propiedad"].values[0],1)}%""")
             st.metric("Proporció d'habitatges principals", value=f"""{round(100 - censo_2021[censo_2021["Municipi"]==selected_mun]["Perc_noprincipales_y"].values[0],1)}%""")
             st.metric("Edat mitjana dels habitatges", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Edad media"].values[0],1)}""")
-            st.plotly_chart(bar_plotly_demografia(rentaneta_mun.rename(columns={"Año":"Any"}).set_index("Any"), ["rentanetahogar_" + selected_mun], "Evolució anual de la renda mitjana neta", "€", 2015), use_container_width=True, responsive=True)
+
         with right:
             st.metric("Proporció d'habitatges en lloguer", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Perc_alquiler"].values[0], 1)}%""")
             st.metric("Proporció d'habitatges no principals", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Perc_noprincipales_y"].values[0],1)}%""")
             st.metric("Superfície mitjana dels habitatges", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Superficie media"].values[0],1)}""")
-            st.plotly_chart(donut_plotly_demografia(subset_tamaño_mun_aux,["Tamany", "Llars"], "Distribució del nombre de membres per llar", "Llars"), use_container_width=True, responsive=True)
+        st.markdown("<div class='custom-box'>MERCAT LABORAL</div>", unsafe_allow_html=True)
+        left, right = st.columns((1,1))
+        with left:
+            st.metric("Població ocupada (" + str(idescat_muns[["Any", "poblacio_ocupada_" + selected_mun]].dropna()["Any"].values[0]) + ")", value=f"""{int(idescat_muns["poblacio_ocupada_" + selected_mun].dropna().values[0]):,.0f}""")
+            st.metric("Població activa (" + str(idescat_muns[["Any", "poblacio_activa_" + selected_mun]].dropna()["Any"].values[0]) + ")", value=f"""{int(idescat_muns["poblacio_activa_" + selected_mun].dropna().values[0]):,.0f}""")
+            st.metric("Afiliats del sector construcció (" + str(idescat_muns[["Any", "AfiliatSS_Construcció_" + selected_mun]].dropna()["Any"].values[0]) + ")", value=f"""{int(idescat_muns["AfiliatSS_Construcció_" + selected_mun].dropna().values[0]):,.0f}""")
+            st.metric("Afiliats del sector serveis (" + str(idescat_muns[["Any", "AfiliatSS_Serveis_" + selected_mun]].dropna()["Any"].values[0]) + ")", value=f"""{int(idescat_muns["AfiliatSS_Serveis_" + selected_mun].dropna().values[0]):,.0f}""")
+        with right:
+            st.metric("Població desocupada (" + str(idescat_muns[["Any", "poblacio_desocupada_" + selected_mun]].dropna()["Any"].values[0]) + ")", value=f"""{int(idescat_muns["poblacio_desocupada_" + selected_mun].dropna().values[0]):,.0f}""")
+            st.metric("Afiliats del sector agricola (" + str(idescat_muns[["Any", "AfiliatSS_Agricultura_" + selected_mun]].dropna()["Any"].values[0]) + ")", value=f"""{int(idescat_muns["AfiliatSS_Agricultura_" + selected_mun].dropna().values[0]):,.0f}""")
+            st.metric("Afiliats del sector indústria (" + str(idescat_muns[["Any", "AfiliatSS_Indústria_" + selected_mun]].dropna()["Any"].values[0]) + ")", value=f"""{int(idescat_muns["AfiliatSS_Indústria_" + selected_mun].dropna().values[0]):,.0f}""")
+            st.metric("Afiliats a la SS total (" + str(idescat_muns[["Any", "AfiliatSS_Total_" + selected_mun]].dropna()["Any"].values[0]) + ")", value=f"""{int(idescat_muns["AfiliatSS_Total_" + selected_mun].dropna().values[0]):,.0f}""")
+
+
 if selected=="Districtes de Barcelona":
     left, center, right= st.columns((1,1,1))
     with left:
