@@ -73,6 +73,7 @@ max_trim_lloguer= "2024-07-01"
 date_max_hipo_aux = "2024-09-01"
 date_max_ciment_aux = "2024-09-01"
 date_max_euribor = "2024-10-01"
+date_max_ipc = "2024-09-01"
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def import_data(trim_limit, month_limit):
@@ -517,7 +518,7 @@ if selected == "Espanya":
             st.subheader("ÍNDEX DE PREUS AL CONSUM (IPC)")
             st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
             min_year=2002
-            table_espanya_m = tidy_Catalunya_mensual(DT_monthly, ["Fecha", "IPC_Nacional_x", "IPC_subyacente", "IGC_Nacional"], f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data","IPC (Base 2021)","IPC subjacent", "IGC"])
+            table_espanya_m = tidy_Catalunya_mensual(DT_monthly, ["Fecha", "IPC_Nacional_x", "IPC_subyacente", "IGC_Nacional"], f"{str(min_year)}-01-01", date_max_ipc,["Data","IPC (Base 2021)","IPC subjacent", "IGC"])
 
             table_espanya_m["Inflació"] = table_espanya_m["IPC (Base 2021)"].pct_change(12).mul(100)
             table_espanya_m["Inflació subjacent"] = round(table_espanya_m["IPC subjacent"].mul(100),1)
