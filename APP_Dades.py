@@ -69,10 +69,10 @@ with right_col:
             })
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
-max_trim_lloguer= "2024-07-01"
+max_trim_lloguer= "2024-10-01"
 date_max_hipo_aux = "2024-09-01"
 date_max_ciment_aux = "2024-10-01"
-date_max_euribor = "2024-10-01"
+date_max_euribor = "2024-11-01"
 date_max_ipc = "2024-10-01"
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
