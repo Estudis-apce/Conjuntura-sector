@@ -930,7 +930,7 @@ if selected == "Catalunya":
             desc_bec = f'<div style="text-align: justify">{desc_bec_aux}</div>'
             st.markdown(desc_bec, unsafe_allow_html=True)
             st.markdown("")
-            st.markdown(f"""<a href="https://drive.google.com/file/d/1-5QkREGGzgd7YA8TzO7n4_brxe30eZ5g/" target="_blank"><button class="download-button">Descarregar BEC</button></a>""", unsafe_allow_html=True)
+            st.markdown(f"""<a href="https://drive.google.com/file/d/1ArRHGTPnDjI2gq9iaGhL4MQK7SbIDNDb/" target="_blank"><button class="download-button">Descarregar BEC</button></a>""", unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
