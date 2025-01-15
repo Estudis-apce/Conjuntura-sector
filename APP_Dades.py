@@ -70,10 +70,10 @@ with right_col:
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
 max_trim_lloguer= "2024-10-01"
-date_max_hipo_aux = "2024-09-01"
+date_max_hipo_aux = "2024-10-01"
 date_max_ciment_aux = "2024-10-01"
-date_max_euribor = "2024-11-01"
-date_max_ipc = "2024-11-01"
+date_max_euribor = "2024-12-01"
+date_max_ipc = "2024-12-01"
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def import_data(trim_limit, month_limit):
@@ -133,7 +133,7 @@ def import_data(trim_limit, month_limit):
 
     return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns])
 
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns = import_data("2024-10-01", "2024-11-01")
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns = import_data("2024-10-01", "2024-12-01")
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
@@ -219,13 +219,13 @@ def tidy_present_monthly_diff(data_ori, columns_sel, year):
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def indicator_year(df, df_aux, year, variable, tipus, frequency=None):
-    if (year==str(datetime.now().year) and (frequency=="month") and ((tipus=="var") or (tipus=="diff"))):
+    if (year==str(datetime.now().year-1) and (frequency=="month") and ((tipus=="var") or (tipus=="diff"))):
         return(round(tidy_present_monthly(df_aux, variable, year),2))
-    if (year==str(datetime.now().year) and (frequency=="month_aux") and (tipus=="var")):
+    if (year==str(datetime.now().year-1) and (frequency=="month_aux") and (tipus=="var")):
         return(round(tidy_present_monthly_aux(df_aux, variable, year),2))
-    if (year==str(datetime.now().year) and (frequency=="month_aux") and ((tipus=="diff"))):
+    if (year==str(datetime.now().year-1) and (frequency=="month_aux") and ((tipus=="diff"))):
         return(round(tidy_present_monthly_diff(df_aux, variable, year),2))
-    if (year==str(datetime.now().year) and ((tipus=="var") or (tipus=="diff"))):
+    if (year==str(datetime.now().year-1) and ((tipus=="var") or (tipus=="diff"))):
         return(round(tidy_present(df_aux.reset_index(), variable, year),2))
     if tipus=="level":
         df = df[df.index==year][variable]
@@ -656,7 +656,7 @@ if selected == "Espanya":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_espanya_q, 2020).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_espanya_q, 2021).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_espanya_q, 2008), f"{selected_index}_Espanya.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -925,12 +925,11 @@ if selected == "Catalunya":
                 st.metric(label="**Unifamiliar de dos plantes entre mitjaneres** (€/m\u00b2)", value=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Unifamiliar de dos plantes entre mitjaneres", "level"):,.0f}""", delta=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Unifamiliar de dos plantes entre mitjaneres", "var")}%""")
                 st.metric(label="**Edifici d’oficines entre mitjaneres** (€/m\u00b2)", value=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Edifici d’oficines entre mitjaneres", "level"):,.0f}""", delta=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Edifici d’oficines entre mitjaneres", "var")}%""")
             desc_bec_aux = """Els preus per m² construït inclouen l’estudi de seguretat i salut, els honoraris tècnics i permisos d’obra amb un benefici industrial del 20% i despeses generals. Addicionalment, 
-            cal comentar que aquests preus fan referència a la província de Barcelona. Si la ubicació de l'obra es troba en una província diferent, la disminució dels preus serà d'un 6% a 8% a Girona, 8% a 10% a Tarragona i del 12% a 15% a Lleida. 
-            Pot consultar l'última edició del Butlletí Econòmic de la Costrucció (BEC) fent click sobre el link a continuació: """
-            desc_bec = f'<div style="text-align: justify">{desc_bec_aux}</div>'
-            st.markdown(desc_bec, unsafe_allow_html=True)
-            st.markdown("")
-            st.markdown(f"""<a href="https://drive.google.com/file/d/1ArRHGTPnDjI2gq9iaGhL4MQK7SbIDNDb/" target="_blank"><button class="download-button">Descarregar BEC</button></a>""", unsafe_allow_html=True)
+            cal comentar que aquests preus fan referència a la província de Barcelona. Si la ubicació de l'obra es troba en una província diferent, la disminució dels preus serà d'un 6% a 8% a Girona, 8% a 10% a Tarragona i del 12% a 15% a Lleida."""
+            # desc_bec = f'<div style="text-align: justify">{desc_bec_aux}</div>'
+            # st.markdown(desc_bec, unsafe_allow_html=True)
+            # st.markdown("")
+            # st.markdown(f"""<a href="https://drive.google.com/file/d/1ArRHGTPnDjI2gq9iaGhL4MQK7SbIDNDb/" target="_blank"><button class="download-button">Descarregar BEC</button></a>""", unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
