@@ -70,7 +70,7 @@ with right_col:
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
 max_trim_lloguer= "2024-10-01"
-date_max_hipo_aux = "2024-10-01"
+date_max_hipo_aux = "2024-11-01"
 date_max_ciment_aux = "2024-10-01"
 date_max_euribor = "2024-12-01"
 date_max_ipc = "2024-12-01"
@@ -133,7 +133,7 @@ def import_data(trim_limit, month_limit):
 
     return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns])
 
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns = import_data("2024-10-01", "2024-12-01")
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns = import_data("2025-01-01", "2025-01-01")
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
@@ -530,7 +530,7 @@ if selected == "Espanya":
             table_espanya_y["Índex de Garantia de Competitivitat (IGC)"] = round(table_espanya_y["IGC"],1)
             table_espanya_y = table_espanya_y.drop(["IPC subjacent", "IGC"], axis=1)
 
-            if selected_year_n==max_year-1:
+            if selected_year_n==max_year:
                 left, center, right= st.columns((1,1,1))
                 with left:
                     st.metric(label="**Inflació** (var. anual)", value=f"""{round(table_espanya_m["Inflació"][-1],1)}%""")
@@ -538,7 +538,7 @@ if selected == "Espanya":
                     st.metric(label="**Inflació subjacent** (var. anual)", value=f"""{round(table_espanya_m["Inflació subjacent"][-1],1)}%""")
                 with right:
                     st.metric(label="**Índex de Garantia de Competitivitat** (var. anual)", value=f"""{round(table_espanya_m["Índex de Garantia de Competitivitat (IGC)"][-1],1)}%""")
-            if selected_year_n!=max_year-1:
+            if selected_year_n!=max_year:
                 left, center, right= st.columns((1,1,1))
                 with left:
                     st.metric(label="**Inflació** (var. anual mitjana)", value=f"""{round(table_espanya_y[table_espanya_y.index==str(selected_year_n)]["Inflació"].values[0], 1)}%""")
@@ -593,7 +593,7 @@ if selected == "Espanya":
             table_espanya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha", "Euribor_1m", "Euribor_3m","Euribor_6m", "Euribor_1y", "tipo_hipo"], min_year, max_year,["Any", "Euríbor a 1 mes","Euríbor a 3 mesos","Euríbor a 6 mesos", "Euríbor a 1 any", "Tipus d'interès d'hipoteques"])
             table_espanya_y = table_espanya_y[["Euríbor a 1 mes","Euríbor a 3 mesos","Euríbor a 6 mesos","Euríbor a 1 any", "Tipus d'interès d'hipoteques"]]
 
-            if selected_year_n==max_year-1:
+            if selected_year_n==max_year:
                 left, left_center, right_center, right = st.columns((1,1,1,1))
                 with left:
                     st.metric(label="**Euríbor a 3 mesos** (%)", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Euríbor a 3 mesos", "level")}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), ["Euríbor a 3 mesos"], "diff", "month_aux")} p.b.""")
@@ -603,7 +603,7 @@ if selected == "Espanya":
                     st.metric(label="**Euríbor a 1 any** (%)", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Euríbor a 1 any", "level")}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), ["Euríbor a 1 any"], "diff", "month_aux")} p.b.""")
                 with right:
                     st.metric(label="**Tipus d'interès d'hipoteques** (%)", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Tipus d'interès d'hipoteques", "level")}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), ["Tipus d'interès d'hipoteques"], "diff", "month_aux")} p.b.""")
-            if selected_year_n!=max_year-1:
+            if selected_year_n!=max_year:
                 left, left_center, right_center, right = st.columns((1,1,1,1))
                 with left:
                     st.metric(label="**Euríbor a 3 mesos** (%)", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Euríbor a 3 mesos", "level")}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), "Euríbor a 3 mesos", "diff", "month")} p.b.""")
