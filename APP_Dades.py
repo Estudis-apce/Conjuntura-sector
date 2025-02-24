@@ -70,10 +70,10 @@ with right_col:
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
 max_trim_lloguer= "2024-10-01"
-date_max_hipo_aux = "2024-11-01"
+date_max_hipo_aux = "2025-01-01"
 date_max_ciment_aux = "2024-10-01"
-date_max_euribor = "2024-12-01"
-date_max_ipc = "2024-12-01"
+date_max_euribor = "2025-01-01"
+date_max_ipc = "2025-01-01"
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def import_data(trim_limit, month_limit):
@@ -2161,7 +2161,7 @@ if selected=="Municipis":
         left, right = st.columns((1,1))
         with left:
             st.metric("Tamany de la llar més freqüent", value=censo_2021[censo_2021["Municipi"]==selected_mun]["Tamaño_hogar_frecuente"].values[0])
-            st.metric("Proporció de població nacional", value=f"""{round(100 - censo_2021[censo_2021["Municipi"]==selected_mun]["Perc_extranjera"].values[0],1):,.0f}%""")
+            st.metric("Proporció de població nacional", value=f"""{round(100 - censo_2021[censo_2021["Municipi"]==selected_mun]["Perc_extranjera"].values[0],2):,.0f}%""")
             st.metric("Població", value=f"""{int(DT_mun_y["poptott_"+ selected_mun].dropna().values[-1]):,.0f}""")
         with right:
             st.metric("Tamany mitjà de la llar", value=f"""{round(censo_2021[censo_2021["Municipi"]==selected_mun]["Tamaño medio del hogar"].values[0],2)}""")
@@ -2431,11 +2431,11 @@ if selected=="Districtes de Barcelona":
             subset_tamaño_dis_aux.columns = ["Tamany", "Llars"]
             max_column = subset_tamaño_dis.idxmax(axis=1).values[0]
             st.metric("Tamany de la llar més freqüent", value=max_column)
-            st.metric("Proporció de població nacional", value=f"""{round(100 - censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Perc_extranjera"].values[0]*100,1)}%""")
+            st.metric("Proporció de població nacional", value=f"""{round(100 - censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Perc_extranjera"].values[0]*100,0)}%""")
             st.metric("Renda neta per llar", value=f"""{(rentaneta_dis["rentahogar_" + selected_dis].values[-1]):,.0f}""")
         with right:
             st.metric("Tamany mitjà de la llar", value=f"""{censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Tamaño medio del hogar"].values[0]}""")
-            st.metric("Prorporció de població estrangera", value=f"""{round(censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Perc_extranjera"].values[0],1)*100}%""")
+            st.metric("Proporció de població estrangera", value=f"""{round(censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Perc_extranjera"].values[0],2)*100}%""")
             st.metric("Proporció de població amb educació superior", value=f"""{round(censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Perc_edusuperior"].values[0]*100,1)}%""")
 
         st.markdown(f"<div class='custom-box'>CARACTERÍSTIQUES DEL PARC D'HABITATGE (2021)</div>", unsafe_allow_html=True)
