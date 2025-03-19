@@ -69,7 +69,7 @@ with right_col:
             })
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
-max_trim_lloguer= "2024-10-01"
+max_trim_lloguer= "2025-01-01"
 date_max_hipo_aux = "2025-01-01"
 date_max_ciment_aux = "2024-10-01"
 date_max_euribor = "2025-01-01"
@@ -864,9 +864,9 @@ if selected == "Catalunya":
         if selected_indicator=="Sector residencial":
             selected_type = st.radio("**Mercat de venda o lloguer**", ("Venda", "Lloguer"), horizontal=True)
     with center:
-        if selected_indicator=="Indicadors econòmics":
+        if (selected_indicator=="Indicadors econòmics"):
             selected_index = st.selectbox("**Selecciona un indicador:**", ["Costos de construcció", "Mercat laboral", "Consum de Ciment", "Hipoteques"], key=302)
-        if (selected_indicator=="Sector residencial"):
+        if ((selected_indicator=="Sector residencial")):
             selected_index = st.selectbox("**Selecciona un indicador:**", ["Producció", "Compravendes", "Preus", "Superfície"], key=303)
         # if (selected_type=="Lloguer") and (selected_indicator=="Sector residencial"):
         #     st.write("")
