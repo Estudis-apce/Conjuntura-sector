@@ -70,10 +70,10 @@ with right_col:
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
 max_trim_lloguer= "2025-01-01"
-date_max_hipo_aux = "2025-01-01"
-date_max_ciment_aux = "2024-10-01"
-date_max_euribor = "2025-01-01"
-date_max_ipc = "2025-01-01"
+date_max_hipo_aux = "2025-04-01"
+date_max_ciment_aux = "2025-03-01"
+date_max_euribor = "2025-05-01"
+date_max_ipc = "2025-05-01"
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def import_data(trim_limit, month_limit):
@@ -133,7 +133,7 @@ def import_data(trim_limit, month_limit):
 
     return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns])
 
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns = import_data("2025-01-01", "2025-01-01")
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns = import_data("2025-04-01", "2025-04-01")
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
@@ -219,13 +219,13 @@ def tidy_present_monthly_diff(data_ori, columns_sel, year):
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def indicator_year(df, df_aux, year, variable, tipus, frequency=None):
-    if (year==str(datetime.now().year-1) and (frequency=="month") and ((tipus=="var") or (tipus=="diff"))):
+    if (year==str(datetime.now().year) and (frequency=="month") and ((tipus=="var") or (tipus=="diff"))):
         return(round(tidy_present_monthly(df_aux, variable, year),2))
-    if (year==str(datetime.now().year-1) and (frequency=="month_aux") and (tipus=="var")):
+    if (year==str(datetime.now().year) and (frequency=="month_aux") and (tipus=="var")):
         return(round(tidy_present_monthly_aux(df_aux, variable, year),2))
-    if (year==str(datetime.now().year-1) and (frequency=="month_aux") and ((tipus=="diff"))):
+    if (year==str(datetime.now().year) and (frequency=="month_aux") and ((tipus=="diff"))):
         return(round(tidy_present_monthly_diff(df_aux, variable, year),2))
-    if (year==str(datetime.now().year-1) and ((tipus=="var") or (tipus=="diff"))):
+    if (year==str(datetime.now().year) and ((tipus=="var") or (tipus=="diff"))):
         return(round(tidy_present(df_aux.reset_index(), variable, year),2))
     if tipus=="level":
         df = df[df.index==year][variable]
@@ -496,7 +496,7 @@ def table_year(data_ori, year_ini, rounded=False, formated=True):
         return(format_dataframes(data_output, False))
     
 #Defining years
-max_year= 2025
+max_year= 2026
 available_years = list(range(2018,max_year))
 index_year = 2024
 
@@ -981,7 +981,6 @@ if selected == "Catalunya":
             table_catalunya_q = table_catalunya_q[["Nombre d'hipoteques", "Import d'hipoteques"]]
             table_catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","hipon_Catalunya", "hipoimp_Catalunya"], min_year, max_year,["Any", "Nombre d'hipoteques", "Import d'hipoteques"])
             table_catalunya_y = table_catalunya_y[["Nombre d'hipoteques", "Import d'hipoteques"]]
-
             if selected_year_n==max_year-1:
                 left, right = st.columns((1,1))
                 with left:
