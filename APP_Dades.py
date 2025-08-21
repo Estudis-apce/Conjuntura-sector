@@ -44,7 +44,7 @@ markdown = f"""
 st.markdown(markdown, unsafe_allow_html=True)
 
 
-left_col, right_col, margin_right = st.columns((0.2, 1, 0.2))
+left_col, right_col, margin_right = st.columns((0.15, 1, 0.15))
 with right_col:
     selected = option_menu(
         menu_title=None,  # required
@@ -69,11 +69,11 @@ with right_col:
             })
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
-max_trim_lloguer= "2025-01-01"
-date_max_hipo_aux = "2025-04-01"
-date_max_ciment_aux = "2025-03-01"
-date_max_euribor = "2025-05-01"
-date_max_ipc = "2025-05-01"
+max_trim_lloguer= "2025-04-01"
+date_max_hipo_aux = "2025-05-01"
+date_max_ciment_aux = "2025-07-01"
+date_max_euribor = "2025-07-01"
+date_max_ipc = "2025-07-01"
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def import_data(trim_limit, month_limit):
@@ -133,7 +133,7 @@ def import_data(trim_limit, month_limit):
 
     return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns])
 
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns = import_data("2025-04-01", "2025-04-01")
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns = import_data("2025-07-01", "2025-07-01")
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
@@ -498,7 +498,7 @@ def table_year(data_ori, year_ini, rounded=False, formated=True):
 #Defining years
 max_year= 2026
 available_years = list(range(2018,max_year))
-index_year = 2024
+index_year = 2025
 
 ###################################################################### SCRIPT PESTAÑAS ##########################################################################
 if selected == "Espanya":
@@ -521,12 +521,12 @@ if selected == "Espanya":
             table_espanya_m = tidy_Catalunya_mensual(DT_monthly, ["Fecha", "IPC_Nacional_x", "IPC_subyacente", "IGC_Nacional"], f"{str(min_year)}-01-01", date_max_ipc,["Data","IPC (Base 2021)","IPC subjacent", "IGC"])
 
             table_espanya_m["Inflació"] = table_espanya_m["IPC (Base 2021)"].pct_change(12).mul(100)
-            table_espanya_m["Inflació subjacent"] = round(table_espanya_m["IPC subjacent"].mul(100),1)
+            table_espanya_m["Inflació subjacent"] = round(table_espanya_m["IPC subjacent"],1)
             table_espanya_m["Índex de Garantia de Competitivitat (IGC)"] = round(table_espanya_m["IGC"],1)
             table_espanya_m = table_espanya_m.drop(["IPC subjacent", "IGC"], axis=1)
             table_espanya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","IPC_Nacional_x", "IPC_subyacente", "IGC_Nacional"], min_year, max_year,["Any", "IPC (Base 2021)","IPC subjacent", "IGC"])
             table_espanya_y["Inflació"] = table_espanya_y["IPC (Base 2021)"].pct_change(1).mul(100)
-            table_espanya_y["Inflació subjacent"] = round(table_espanya_y["IPC subjacent"].mul(100),1)
+            table_espanya_y["Inflació subjacent"] = round(table_espanya_y["IPC subjacent"],1)
             table_espanya_y["Índex de Garantia de Competitivitat (IGC)"] = round(table_espanya_y["IGC"],1)
             table_espanya_y = table_espanya_y.drop(["IPC subjacent", "IGC"], axis=1)
 
@@ -564,13 +564,13 @@ if selected == "Espanya":
             table_espanya_m = tidy_Catalunya_m(DT_monthly, ["Fecha"] + ["cons_ciment_Espanya"], f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Consum de ciment"])
             table_espanya_q = tidy_Catalunya(DT_terr, ["Fecha","cons_ciment_Espanya"],  f"{str(min_year)}-01-01", f"{date_max_ciment_aux}",["Data", "Consum de ciment"])
             table_espanya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","cons_ciment_Espanya"], min_year, max_year,["Any", "Consum de ciment"])
-            table_espanya_q = table_espanya_q.dropna(axis=0)
-            table_espanya_y = table_espanya_y.dropna(axis=0)
+            table_espanya_q = table_espanya_q.dropna(axis=0).div(1000)
+            table_espanya_y = table_espanya_y.dropna(axis=0).div(1000)
             st.metric(label="**Consum de ciment** (Milers de tones)", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Consum de ciment", "level"):,.0f}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), "Consum de ciment", "var", "month")}%""")
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_espanya_q, 2020, True, False).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_espanya_q, 2021, True, False).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_espanya_q, 2012), f"{selected_index}_Espanya.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -729,12 +729,12 @@ if selected == "Espanya":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_esp, 2020).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_esp, 2021).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_esp, 2008), f"{selected_index}_Espanya.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES ANUALS**")
-            st.markdown(table_year(table_esp_y, 2008).to_html(), unsafe_allow_html=True)
+            st.markdown(table_year(table_esp_y, 2014).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_year(table_esp_y, 2008), f"{selected_index}_Espanya_anual.xlsx"), unsafe_allow_html=True)
             left, right = st.columns((1,1))
             with left:
@@ -775,12 +775,12 @@ if selected == "Espanya":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_esp, 2020).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_esp, 2021).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_esp, 2008), f"{selected_index}_Espanya.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES ANUALS**")
-            st.markdown(table_year(table_esp_y, 2008).to_html(), unsafe_allow_html=True)
+            st.markdown(table_year(table_esp_y, 2014).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_year(table_esp_y, 2008), f"{selected_index}_Espanya_anual.xlsx"), unsafe_allow_html=True)
             left_col, right_col = st.columns((1,1))
             with left_col:
@@ -808,12 +808,12 @@ if selected == "Espanya":
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-                st.markdown(table_trim(table_esp, 2020, True, False).to_html(), unsafe_allow_html=True)
+                st.markdown(table_trim(table_esp, 2021, True, False).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_trim(table_esp, 2008, True, False), f"{selected_index}_Espanya.xlsx"), unsafe_allow_html=True)
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES ANUALS**")
-                st.markdown(table_year(table_esp_y, 2008, True, False).to_html(), unsafe_allow_html=True)
+                st.markdown(table_year(table_esp_y, 2014, True, False).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_year(table_esp_y, 2008, True, False), f"{selected_index}_Espanya_anual.xlsx"), unsafe_allow_html=True)
                 left_col, right_col = st.columns((1,1))
                 with left_col:
@@ -844,12 +844,12 @@ if selected == "Espanya":
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-                st.markdown(table_trim(table_esp, 2020, True, False).to_html(), unsafe_allow_html=True)
+                st.markdown(table_trim(table_esp, 2021, True, False).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_trim(table_esp, 2008, True, False), f"{selected_index}_Espanya.xlsx"), unsafe_allow_html=True)
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES ANUALS**")
-                st.markdown(table_year(table_esp_y, 2008, True, False).to_html(), unsafe_allow_html=True)
+                st.markdown(table_year(table_esp_y, 2014, True, False).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_year(table_esp_y, 2008, True, False), f"{selected_index}_Espanya_anual.xlsx"), unsafe_allow_html=True)
                 left_col, right_col = st.columns((1,1))
                 with left_col:
@@ -894,12 +894,12 @@ if selected == "Catalunya":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_catalunya_q, 2020, rounded=True).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_catalunya_q, 2021, rounded=True).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_catalunya_q, 2012, rounded=True), f"{selected_index}_Catalunya.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES ANUALS**")
-            st.markdown(table_year(table_catalunya_y, 2008, rounded=True).to_html(), unsafe_allow_html=True)
+            st.markdown(table_year(table_catalunya_y, 2014, rounded=True).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_year(table_catalunya_y, 2008, rounded=True), f"{selected_index}_Catalunya_anual.xlsx"), unsafe_allow_html=True)
 
             
@@ -933,7 +933,7 @@ if selected == "Catalunya":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_catalunya_q, 2020).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_catalunya_q, 2021).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_catalunya_q, 2013), f"{selected_index}_Catalunya.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -953,8 +953,9 @@ if selected == "Catalunya":
             table_catalunya_m = tidy_Catalunya_m(DT_monthly, ["Fecha"] + ["cons_ciment_Catalunya"], f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Consum de ciment"])
             table_catalunya_q = tidy_Catalunya(DT_terr, ["Fecha","cons_ciment_Catalunya"],  f"{str(min_year)}-01-01", f"{date_max_ciment_aux}",["Data", "Consum de ciment"])
             table_catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","cons_ciment_Catalunya"], min_year, max_year,["Any", "Consum de ciment"])
-            table_catalunya_q = table_catalunya_q.dropna(axis=0)
-            table_catalunya_y = table_catalunya_y.dropna(axis=0)
+
+            table_catalunya_q = table_catalunya_q.dropna(axis=0).div(1000)
+            table_catalunya_y = table_catalunya_y.dropna(axis=0).div(1000)
             st.metric(label="**Consum de ciment** (Milers de tones)", value=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Consum de ciment", "level"):,.0f}""", delta=f"""{indicator_year(table_catalunya_y, table_catalunya_m, str(selected_year_n), "Consum de ciment", "var", "month")}%""")
             st.markdown("")
             st.markdown("")
@@ -997,7 +998,7 @@ if selected == "Catalunya":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_catalunya_q, 2020).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_catalunya_q, 2021).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_catalunya_q, 2014), f"{selected_index}_Catalunya.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -1097,12 +1098,12 @@ if selected == "Catalunya":
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-                st.markdown(table_trim(table_Catalunya, 2020).to_html(), unsafe_allow_html=True)
+                st.markdown(table_trim(table_Catalunya, 2021).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_trim(table_Catalunya, 2008), f"{selected_index}_Catalunya.xlsx"), unsafe_allow_html=True)
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES ANUALS**")
-                st.markdown(table_year(table_Catalunya_y, 2008).to_html(), unsafe_allow_html=True)
+                st.markdown(table_year(table_Catalunya_y, 2014).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_year(table_Catalunya_y, 2008), f"{selected_index}_Catalunya_anual.xlsx"), unsafe_allow_html=True)
 
                 left_col, right_col = st.columns((1,1))
@@ -1141,7 +1142,7 @@ if selected == "Catalunya":
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-                st.markdown(table_trim(table_Catalunya, 2020).to_html(), unsafe_allow_html=True)
+                st.markdown(table_trim(table_Catalunya, 2021).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_trim(table_Catalunya, 2014), f"{selected_index}_Catalunya.xlsx"), unsafe_allow_html=True)
                 st.markdown("")
                 st.markdown("")
@@ -1178,7 +1179,7 @@ if selected == "Catalunya":
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-                st.markdown(table_trim(table_Catalunya, 2020, True, False).to_html(), unsafe_allow_html=True)
+                st.markdown(table_trim(table_Catalunya, 2021, True, False).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_trim(table_Catalunya, 2014, True, False), f"{selected_index}_Catalunya.xlsx"), unsafe_allow_html=True)
                 st.markdown("")
                 st.markdown("")
@@ -1215,7 +1216,7 @@ if selected == "Catalunya":
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-                st.markdown(table_trim(table_Catalunya, 2020, True, False).to_html(), unsafe_allow_html=True)
+                st.markdown(table_trim(table_Catalunya, 2021, True, False).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_trim(table_Catalunya, 2014, True, False), f"{selected_index}_Catalunya.xlsx"), unsafe_allow_html=True)
                 st.markdown("")
                 st.markdown("")
@@ -1247,7 +1248,7 @@ if selected == "Catalunya":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_Catalunya, 2020, True).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_Catalunya, 2021, True).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_Catalunya, 2014, True), f"{selected_type}_Catalunya.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -1325,12 +1326,12 @@ if selected == "Províncies i àmbits":
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-                st.markdown(table_trim(table_province, 2020).to_html(), unsafe_allow_html=True)
+                st.markdown(table_trim(table_province, 2021).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_trim(table_province, 2008), f"{selected_index}_{selected_geo}.xlsx"), unsafe_allow_html=True)
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES ANUALS**")
-                st.markdown(table_year(table_province_y, 2008, rounded=False).to_html(), unsafe_allow_html=True)
+                st.markdown(table_year(table_province_y, 2014, rounded=False).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_year(table_province_y, 2008, rounded=False), f"{selected_index}_{selected_geo}_anual.xlsx"), unsafe_allow_html=True)
                 left_col, right_col = st.columns((1,1))
                 with left_col:
@@ -1367,7 +1368,7 @@ if selected == "Províncies i àmbits":
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-                st.markdown(table_trim(table_province, 2020).to_html(), unsafe_allow_html=True)
+                st.markdown(table_trim(table_province, 2021).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_trim(table_province, 2014), f"{selected_index}_{selected_geo}.xlsx"), unsafe_allow_html=True)
                 st.markdown("")
                 st.markdown("")
@@ -1405,7 +1406,7 @@ if selected == "Províncies i àmbits":
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-                st.markdown(table_trim(table_province, 2020, True, False).to_html(), unsafe_allow_html=True)
+                st.markdown(table_trim(table_province, 2021, True, False).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_trim(table_province, 2014, True, False), f"{selected_index}_{selected_geo}.xlsx"), unsafe_allow_html=True)
                 st.markdown("")
                 st.markdown("")
@@ -1443,7 +1444,7 @@ if selected == "Províncies i àmbits":
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-                st.markdown(table_trim(table_province, 2020, True, False).to_html(), unsafe_allow_html=True)
+                st.markdown(table_trim(table_province, 2021, True, False).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_trim(table_province, 2014, True, False), f"{selected_index}_{selected_geo}.xlsx"), unsafe_allow_html=True)
                 st.markdown("")
                 st.markdown("")
@@ -1491,12 +1492,12 @@ if selected == "Províncies i àmbits":
                     try:
                         st.metric(label="**Habitatges acabats plurifamiliars**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats plurifamiliars", "var")}%""")
                     except IndexError:
-                        st.metric(label="**Habitatges iniciats unifamiliars**", value="No disponible")
+                        st.metric(label="**Habitatges acabats plurifamiliars**", value="No disponible")
                 with right:
                     try:
                         st.metric(label="**Habitatges acabats unifamiliars**", value=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats unifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_province_y, table_province, str(selected_year_n), "Habitatges acabats unifamiliars", "var")}%""")
                     except IndexError:
-                        st.metric(label="**Habitatges iniciats unifamiliars**", value="No disponible")
+                        st.metric(label="**Habitatges acabats unifamiliars**", value="No disponible")
 
                 selected_columns_ini = [col for col in table_province.columns.tolist() if col.startswith("Habitatges iniciats ")]
                 selected_columns_fin = [col for col in table_province.columns.tolist() if col.startswith("Habitatges acabats ")]
@@ -1504,12 +1505,12 @@ if selected == "Províncies i àmbits":
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-                st.markdown(table_trim(table_province, 2020).to_html(), unsafe_allow_html=True)
+                st.markdown(table_trim(table_province, 2021).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_trim(table_province, 2008), f"{selected_index}_{selected_geo}.xlsx"), unsafe_allow_html=True)
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES ANUALS**")
-                st.markdown(table_year(table_province_y, 2008, rounded=False).to_html(), unsafe_allow_html=True)
+                st.markdown(table_year(table_province_y, 2014, rounded=False).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_year(table_province_y, 2008, rounded=False), f"{selected_index}_{selected_geo}_anual.xlsx"), unsafe_allow_html=True)
                 left_col, right_col = st.columns((1,1))
                 with left_col:
@@ -1546,7 +1547,7 @@ if selected == "Províncies i àmbits":
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-                st.markdown(table_trim(table_province, 2020).to_html(), unsafe_allow_html=True)
+                st.markdown(table_trim(table_province, 2021).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_trim(table_province, 2014), f"{selected_index}_{selected_geo}.xlsx"), unsafe_allow_html=True)
                 st.markdown("")
                 st.markdown("")
@@ -1584,7 +1585,7 @@ if selected == "Províncies i àmbits":
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-                st.markdown(table_trim(table_province, 2020, True, False).to_html(), unsafe_allow_html=True)
+                st.markdown(table_trim(table_province, 2021, True, False).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_trim(table_province, 2014, True, False), f"{selected_index}_{selected_geo}.xlsx"), unsafe_allow_html=True)
                 st.markdown("")
                 st.markdown("")
@@ -1622,7 +1623,7 @@ if selected == "Províncies i àmbits":
                 st.markdown("")
                 st.markdown("")
                 # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-                st.markdown(table_trim(table_province, 2020, True, False).to_html(), unsafe_allow_html=True)
+                st.markdown(table_trim(table_province, 2021, True, False).to_html(), unsafe_allow_html=True)
                 st.markdown(filedownload(table_trim(table_province, 2014, True, False), f"{selected_index}_{selected_geo}.xlsx"), unsafe_allow_html=True)
                 st.markdown("")
                 st.markdown("")
@@ -1656,7 +1657,7 @@ if selected == "Províncies i àmbits":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_province, 2020, rounded=True).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_province, 2021, rounded=True).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_province, 2014, rounded=True), f"{selected_type}_{selected_geo}.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -1690,7 +1691,7 @@ if selected == "Províncies i àmbits":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_province, 2020, rounded=True).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_province, 2021, rounded=True).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_province, 2014, rounded=True), f"{selected_type}_{selected_geo}.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -1751,7 +1752,7 @@ if selected=="Comarques":
                 try:
                     st.metric(label="**Habitatges acabats plurifamiliars**", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Habitatges acabats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Habitatges acabats plurifamiliars", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges acabats unifamiliars**", value="No disponible")
+                    st.metric(label="**Habitatges acabats plurifamiliars**", value="No disponible")
             with right:
                 try:
                     st.metric(label="**Habitatges acabats unifamiliars**", value=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Habitatges acabats unifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_com_y, table_com, str(selected_year_n), "Habitatges acabats unifamiliars", "var")}%""")
@@ -1763,12 +1764,12 @@ if selected=="Comarques":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_com, 2020).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_com, 2021).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_com, 2008), f"{selected_index}_{selected_com}.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES ANUALS**")
-            st.markdown(table_year(table_com_y, 2008, rounded=False).to_html(), unsafe_allow_html=True)
+            st.markdown(table_year(table_com_y, 2014, rounded=False).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_year(table_com_y, 2008, rounded=False), f"{selected_index}_{selected_com}_anual.xlsx"), unsafe_allow_html=True)
             left_col, right_col = st.columns((1,1))
             with left_col:
@@ -1806,7 +1807,7 @@ if selected=="Comarques":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_com, 2020).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_com, 2021).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_com, 2014), f"{selected_index}_{selected_com}.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -1844,7 +1845,7 @@ if selected=="Comarques":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_com, 2020,True, False).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_com, 2021,True, False).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_com, 2014, True, False), f"{selected_index}_{selected_com}.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -1881,7 +1882,7 @@ if selected=="Comarques":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_com, 2020, True, False).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_com, 2021, True, False).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_com, 2014, True, False), f"{selected_index}_{selected_com}.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -1914,7 +1915,7 @@ if selected=="Comarques":
         st.markdown("")
         st.markdown("")
         # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-        st.markdown(table_trim(table_province, 2020, rounded=True).to_html(), unsafe_allow_html=True)
+        st.markdown(table_trim(table_province, 2021, rounded=True).to_html(), unsafe_allow_html=True)
         st.markdown(filedownload(table_trim(table_province, 2014, rounded=True), f"{selected_type}_{selected_com}.xlsx"), unsafe_allow_html=True)
         st.markdown("")
         st.markdown("")
@@ -1986,12 +1987,12 @@ if selected=="Municipis":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_mun, 2020).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_mun, 2021).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_mun, 2008), f"{selected_index}_{selected_mun}.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES ANUALS**")
-            st.markdown(table_year(table_mun_y, 2008, rounded=False).to_html(), unsafe_allow_html=True)
+            st.markdown(table_year(table_mun_y, 2014, rounded=False).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_year(table_mun_y, 2008, rounded=False), f"{selected_index}_{selected_mun}_anual.xlsx"), unsafe_allow_html=True)
             left_col, right_col = st.columns((1,1))
             with left_col:
@@ -2027,7 +2028,7 @@ if selected=="Municipis":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_mun, 2020).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_mun, 2021).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_mun, 2014), f"{selected_index}_{selected_mun}.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -2068,7 +2069,7 @@ if selected=="Municipis":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_mun, 2020, True, False).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_mun, 2021, True, False).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_mun, 2014, True, False), f"{selected_index}_{selected_mun}.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -2105,7 +2106,7 @@ if selected=="Municipis":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_mun, 2020, True, False).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_mun, 2021, True, False).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_mun, 2014, True, False), f"{selected_index}_{selected_mun}.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -2137,7 +2138,7 @@ if selected=="Municipis":
                 st.markdown("")
         st.markdown("")
         # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-        st.markdown(table_trim(table_mun, 2020, rounded=True).to_html(), unsafe_allow_html=True)
+        st.markdown(table_trim(table_mun, 2021, rounded=True).to_html(), unsafe_allow_html=True)
         st.markdown(filedownload(table_trim(table_mun, 2014, rounded=True), f"{selected_type}_{selected_mun}.xlsx"), unsafe_allow_html=True)
         st.markdown("")
         st.markdown("")
@@ -2239,7 +2240,7 @@ if selected=="Districtes de Barcelona":
                 try:
                     st.metric(label="**Habitatges iniciats unifamiliars**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges iniciats unifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges iniciats unifamiliars", "var")}%""")
                 except IndexError:
-                    st.metric(label="**Habitatges iniciats plurifamiliars**", value="No disponible")
+                    st.metric(label="**Habitatges iniciats unifamiliars**", value="No disponible")
             with left:
                 try:
                     st.metric(label="**Habitatges acabats**", value=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges acabats", "level"):,.0f}""", delta=f"""{indicator_year(table_dis_y, table_dis, str(selected_year_n), "Habitatges acabats", "var")}%""")
@@ -2261,7 +2262,7 @@ if selected=="Districtes de Barcelona":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_dis, 2020).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_dis, 2021).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_dis, 2014), f"{selected_index}_{selected_dis}.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -2300,7 +2301,7 @@ if selected=="Districtes de Barcelona":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_dis, 2020).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_dis, 2021).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_dis, 2017), f"{selected_index}_{selected_dis}.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -2337,7 +2338,7 @@ if selected=="Districtes de Barcelona":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_dis, 2020, True, False).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_dis, 2021, True, False).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_dis, 2017, True, False), f"{selected_index}_{selected_dis}.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -2374,7 +2375,7 @@ if selected=="Districtes de Barcelona":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_dis, 2020, True, False).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_dis, 2021, True, False).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_dis, 2017, True, False), f"{selected_index}_{selected_dis}.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -2406,7 +2407,7 @@ if selected=="Districtes de Barcelona":
         st.markdown("")
         st.markdown("")
         # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-        st.markdown(table_trim(table_dis, 2020, True).to_html(), unsafe_allow_html=True)
+        st.markdown(table_trim(table_dis, 2021, True).to_html(), unsafe_allow_html=True)
         st.markdown(filedownload(table_trim(table_dis, 2014, True), f"{selected_type}_{selected_dis}.xlsx"), unsafe_allow_html=True)
         st.markdown("")
         st.markdown("")
