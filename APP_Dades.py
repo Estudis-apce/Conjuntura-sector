@@ -1,60 +1,66 @@
-import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use("Agg")
-from matplotlib.ticker import MaxNLocator, FuncFormatter
-import numpy as np
-import plotly.express as px
-import base64
-from streamlit_option_menu import option_menu
-import io
-import geopandas as gpd
-from mpl_toolkits.axes_grid1 import make_axes_locatable
-import plotly.graph_objects as go
-import matplotlib.colors as colors
-import streamlit.components.v1 as components
-import streamlit_authenticator as stauth
-import yaml
-from yaml.loader import SafeLoader
+# ---------------------------
+# Standard library
+# ---------------------------
 from datetime import datetime
+from typing import List, Tuple, Optional, Iterable, Union
+import base64
+import io
 import json
 import re
-from typing import List, Tuple, Optional, Iterable
-from reportlab.lib.pagesizes import A4, landscape as rl_landscape
-from reportlab.lib import colors as rl_colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, KeepTogether
-)
-from reportlab.platypus import BaseDocTemplate, PageTemplate, Frame, NextPageTemplate
 
-from reportlab.lib.units import cm
-# apce_report.py
-import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib
-matplotlib.use("Agg")
-from matplotlib.ticker import MaxNLocator, FuncFormatter
+# ---------------------------
+# Third-party libraries
+# ---------------------------
 import numpy as np
-import io
-from typing import List, Tuple, Optional, Iterable, Union
-from datetime import datetime
+import pandas as pd
 
-# ReportLab
+import matplotlib
+matplotlib.use("Agg")  # Importante: antes de pyplot en entornos sin display (ej. Streamlit)
+import matplotlib.pyplot as plt
+from matplotlib.ticker import MaxNLocator, FuncFormatter
+import matplotlib.colors as colors
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+
+import plotly.express as px
+import plotly.graph_objects as go
+
+import geopandas as gpd
+
+import yaml
+from yaml.loader import SafeLoader
+
+import streamlit as st
+from streamlit_option_menu import option_menu
+import streamlit.components.v1 as components
+import streamlit_authenticator as stauth
+
+# ---------------------------
+# ReportLab (PDF)
+# ---------------------------
 from reportlab.lib.pagesizes import A4, landscape as rl_landscape
 from reportlab.lib import colors as rl_colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, KeepTogether
-)
-from reportlab.platypus.flowables import CondPageBreak
 from reportlab.lib.units import cm
+from reportlab.lib.utils import ImageReader
 
 from reportlab.platypus import (
-    SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image, KeepTogether, PageBreak
+    SimpleDocTemplate,
+    BaseDocTemplate,
+    PageTemplate,
+    Frame,
+    Paragraph,
+    Spacer,
+    Table,
+    TableStyle,
+    Image,           # Nota: Image de platypus
+    KeepTogether,
+    PageBreak,
+    NextPageTemplate,
 )
+# Alias útil para diferenciar imágenes si lo prefieres en tu código:
+from reportlab.platypus import Image as RLImage
+
+from reportlab.platypus.flowables import CondPageBreak
 
 
 # ========== COLORES / CONFIG ==========
@@ -467,15 +473,7 @@ def _styled_table_from_df(df, max_rows: Optional[int] = None, max_cols: int = 12
     ]))
     return tbl
 
-# ========== PDF BUILDER ORDENADO POR SECCIONES ==========
-# Vamos a construir un "content stream" ordenado que mezcla tablas y figuras en el orden deseado.
-# blocks: List[Tuple[str, str, Union[pd.DataFrame, bytes]]], donde el primer item es "table" o "figure".
-from reportlab.platypus import Image as RLImage
 
-from reportlab.lib.units import cm
-from reportlab.lib.utils import ImageReader
-
-from reportlab.platypus import Image as RLImage
 
 def _header_footer(canvas, doc):
     """
@@ -552,7 +550,7 @@ def _header_footer_cover(canvas, doc):
 
 
 
-from reportlab.lib.units import cm
+
 
 def _header_footer_normal(canvas, doc):
     canvas.saveState()
@@ -696,10 +694,6 @@ def build_location_pdf_ordered(
 
 
     def append_cover_page(story, styles, location_name, logo_path="APCE_mod.png"):
-        from reportlab.platypus import PageBreak, Image as RLImage, Spacer, Paragraph, Table, TableStyle
-        from reportlab.lib import colors as rl_colors
-
-        # === Portada ===
         story.append(Spacer(1, 2 * cm))  # margen superior
 
         # Logo grande centrado
@@ -788,7 +782,7 @@ def build_location_pdf_ordered(
             )
         ))
         # ⬇⬇⬇ AÑADIR ESTAS DOS LÍNEAS ANTES DEL SALTO ⬇⬇⬇
-        from reportlab.platypus import NextPageTemplate, PageBreak
+
         story.append(NextPageTemplate('Normal'))
         story.append(PageBreak())
 
@@ -810,9 +804,6 @@ def build_location_pdf_ordered(
                             textColor=_hex_to_rl("#777777")))
 
     def append_closing_page(story, styles, logo_path="APCE_serveis1.png"):
-        from reportlab.platypus import PageBreak, Image as RLImage, Spacer, Paragraph
-
-        # Logo centrado
         try:
             logo = RLImage(logo_path, width=24*cm, height=13.5*cm)
             logo.hAlign = 'CENTER'
@@ -1865,7 +1856,7 @@ def import_data(trim_limit, month_limit):
         idescat_muns= list_idescat_mun[0].copy()
     with open('Censo2021.json', 'r') as outfile:
         list_censo = [pd.DataFrame.from_dict(item) for item in json.loads(outfile.read())]
-    with open('Indicadors_mun.json', 'r') as outfile:
+    with open('Indicadors_mun.json', 'r', encoding="latin-1") as outfile:
         list_mun_idescat = json.load(outfile)
     df_mun_idescat = pd.DataFrame(list_mun_idescat["municipis"])
     df_pob_ine  = pd.DataFrame(list_mun_idescat.get("poblacio_edat_nacionalitat", []))
