@@ -10,3 +10,11 @@ streamlit==1.32.2
 streamlit-authenticator==0.2.1
 streamlit-option-menu==0.3.2
 geopandas==0.12.2
+
+PyYAML==6.0.1
+reportlab==3.6.12
+
+shapely==1.8.5
+pyproj==3.4.1
+fiona==1.9.4
+mapclassify==2.4.3
