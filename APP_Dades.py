@@ -1083,19 +1083,6 @@ def append_altres_indicadors_blocks(
                                f"Economia — Evolució de la renda neta per llar ({selected_mun})",
                                mpl_bar(df_rn, ["Renda neta per llar"], "", "€ per llar",
                                        start_year=max(start_year_series, 2015), force_all_xticks=True)))
-                try:
-                    blocks.append(("table",
-                                f"Estudi d'Oferta de Nova Construcció (APCE). Municipi de  — {selected_mun}",
-                                tabla_estudi_oferta[0].T))
-                    blocks.append(("table",
-                                f"Estudi d'Oferta de Nova Construcció (APCE). Municipi de  — {selected_mun}",
-                                tabla_estudi_oferta[1].T))
-                    blocks.append(("table",
-                                f"Estudi d'Oferta de Nova Construcció (APCE). Municipi de  — {selected_mun}",
-                                tabla_estudi_oferta[2].T))
-                    
-                except: 
-                    pass
     except Exception:
         pass
 
@@ -1116,28 +1103,13 @@ def generar_pdf_municipi_tot(
     # --- Lloguer
     table_mun_llog: pd.DataFrame, table_mun_llog_y: pd.DataFrame,
     # --- Altres indicadors (dataframes globales ya cargados)
-    censo_2021=None, DT_mun_y=None, idescat_muns=None, rentaneta_mun=None, estudi_oferta=None
+    censo_2021=None, DT_mun_y=None, idescat_muns=None, rentaneta_mun=None, tabla_estudi_oferta=None
 ):
     """Genera el PDF del municipi con secciones ordenadas (tabla(s) → gráfico(s)) y salto de página entre indicadores."""
     # ==========================
     # 1) KPIs
     # ==========================
     kpis_pdf = []
-
-
-    try:
-        if isinstance(estudi_oferta, (list, tuple)) and len(estudi_oferta) >= 3:
-            # Ya me lo has pasado precalculado
-            tabla_estudi_oferta = estudi_oferta
-        else:
-            # Lo calculo yo
-            tabla_estudi_oferta = table_mun_oferta_aux(selected_mun, 2024)
-            # esperamos lista/tupla de 3 dataframes
-            if not isinstance(tabla_estudi_oferta, (list, tuple)) or len(tabla_estudi_oferta) < 3:
-                tabla_estudi_oferta = None
-    except Exception:
-        tabla_estudi_oferta = None
-
 
     def _safe_add_kpi(table_y, table_q, col, label):
         try:
@@ -1739,32 +1711,41 @@ def generar_pdf_municipi_tot(
         sections.append(("Economia — Renda", items_renda))
 
     # --------- OFERTA DE NOVA CONSTRUCCIÓ (APCE) ---------
-    items_oferta = []
-    try:
-        if tabla_estudi_oferta is not None:
 
-            # 2. Tablas específicas
+    items_oferta = []  # <- important: sempre es reinicia
+
+    if (
+        tabla_estudi_oferta is not None
+        and isinstance(tabla_estudi_oferta, (list, tuple))
+        and len(tabla_estudi_oferta) >= 3
+    ):
+        try:
             oferta_tables = [
-                (f"Habitatges totals a l'estudi d'oferta de nova construcció APCE 2024 — {selected_mun}",
-                 tabla_estudi_oferta[0].set_index("Variable")),
-
-                (f"Habitatges unifamiliars a l'estudi d'oferta de nova construcció APCE 2024 — {selected_mun}",
-                 tabla_estudi_oferta[1].set_index("Variable")),
-
-                (f"Habitatges plurifamiliars a l'estudi d'oferta de nova construcció APCE 2024 — {selected_mun}",
-                 tabla_estudi_oferta[2].set_index("Variable")),
+                (
+                    f"Habitatges totals a l'estudi d'oferta de nova construcció APCE 2024 — {selected_mun}",
+                    tabla_estudi_oferta[0].set_index("Variable")
+                ),
+                (
+                    f"Habitatges unifamiliars a l'estudi d'oferta de nova construcció APCE 2024 — {selected_mun}",
+                    tabla_estudi_oferta[1].set_index("Variable")
+                ),
+                (
+                    f"Habitatges plurifamiliars a l'estudi d'oferta de nova construcció APCE 2024 — {selected_mun}",
+                    tabla_estudi_oferta[2].set_index("Variable")
+                ),
             ]
 
             for titulo_tab, df_tab in oferta_tables:
-                items_oferta.append((
-                    "table",
-                    (titulo_tab, df_tab)
-                ))
-    except Exception:
-        pass
+                if df_tab is not None and not df_tab.empty:
+                    items_oferta.append(("table", (titulo_tab, df_tab)))
 
-    if items_oferta:
-        sections.append(("Oferta de nova construcció", items_oferta))
+            if len(items_oferta) > 0:
+                sections.append(("Oferta de nova construcció", items_oferta))
+
+        except Exception:
+            pass
+
+
 
 
     # ==========================
@@ -4741,7 +4722,7 @@ if selected=="Informe de mercat":
                     DT_mun_y=DT_mun_y,
                     idescat_muns=idescat_muns,
                     rentaneta_mun=rentaneta_mun,
-                    estudi_oferta = tabla_estudi_oferta
+                    tabla_estudi_oferta = tabla_estudi_oferta
                 )
 
 # if selected=="Contacte":
