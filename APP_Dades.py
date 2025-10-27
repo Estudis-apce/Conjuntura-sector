@@ -444,6 +444,8 @@ def _styled_table_from_df(df, max_rows: Optional[int] = None, max_cols: int = 12
     df = _maybe_flatten_index_and_cols(pd.DataFrame(df))
     df = df.replace([np.inf, -np.inf], np.nan)
     df = _format_df_thousands(df)
+
+
     if max_rows is not None:
         df = df.iloc[:max_rows, :max_cols]
     else:
@@ -454,6 +456,13 @@ def _styled_table_from_df(df, max_rows: Optional[int] = None, max_cols: int = 12
         data.append([str(idx)] + [str(v) for v in row.values])
 
     tbl = Table(data, repeatRows=1)
+
+    try:
+        total_width = 1.15  # 15% más ancha
+        tbl._argW = [w * total_width if w else None for w in tbl._argW]
+    except Exception:
+        pass
+
     tbl.setStyle(TableStyle([
         ('BACKGROUND', (0,0), (-1,0), _hex_to_rl(CSS_COLORS["primary"])),
         ('TEXTCOLOR', (0,0), (-1,0), rl_colors.white),
@@ -472,7 +481,6 @@ def _styled_table_from_df(df, max_rows: Optional[int] = None, max_cols: int = 12
         ('BOTTOMPADDING', (0,0), (-1,-1), 3),
     ]))
     return tbl
-
 
 
 def _header_footer(canvas, doc):
@@ -525,7 +533,7 @@ def _header_footer(canvas, doc):
         canvas.setFillColor(_hex_to_rl(CSS_COLORS["text"]))
         canvas.drawString(
             1.2 * cm, 0.8 * cm,
-            "Font de les dades: Agència de l'Habitatge de Catalunya, INCASÒL, INE."
+            "Font de les dades: APCE, Agència de l'Habitatge de Catalunya, INCASÒL, INE."
         )
         canvas.setFont("Helvetica", 8)
         canvas.drawRightString(doc.pagesize[0] - 1.2 * cm, 0.8 * cm, f"Pàgina {doc.page}")
@@ -582,7 +590,7 @@ def _header_footer_normal(canvas, doc):
     # Esquerra: fonts
     canvas.setFillColor(txt_color)
     canvas.setFont("Helvetica-Oblique", 9)
-    left_text = "Font de les dades: Agència de l'Habitatge de Catalunya, INCASÒL, INE."
+    left_text = "Font de les dades: APCE, Agència de l'Habitatge de Catalunya, INCASÒL, INE."
     canvas.drawString(margin_x, y_text, left_text)
 
     # Centre: web clicable
@@ -1075,6 +1083,19 @@ def append_altres_indicadors_blocks(
                                f"Economia — Evolució de la renda neta per llar ({selected_mun})",
                                mpl_bar(df_rn, ["Renda neta per llar"], "", "€ per llar",
                                        start_year=max(start_year_series, 2015), force_all_xticks=True)))
+                try:
+                    blocks.append(("table",
+                                f"Estudi d'Oferta de Nova Construcció (APCE). Municipi de  — {selected_mun}",
+                                tabla_estudi_oferta[0].T))
+                    blocks.append(("table",
+                                f"Estudi d'Oferta de Nova Construcció (APCE). Municipi de  — {selected_mun}",
+                                tabla_estudi_oferta[1].T))
+                    blocks.append(("table",
+                                f"Estudi d'Oferta de Nova Construcció (APCE). Municipi de  — {selected_mun}",
+                                tabla_estudi_oferta[2].T))
+                    
+                except: 
+                    pass
     except Exception:
         pass
 
@@ -1095,13 +1116,28 @@ def generar_pdf_municipi_tot(
     # --- Lloguer
     table_mun_llog: pd.DataFrame, table_mun_llog_y: pd.DataFrame,
     # --- Altres indicadors (dataframes globales ya cargados)
-    censo_2021=None, DT_mun_y=None, idescat_muns=None, rentaneta_mun=None
+    censo_2021=None, DT_mun_y=None, idescat_muns=None, rentaneta_mun=None, estudi_oferta=None
 ):
     """Genera el PDF del municipi con secciones ordenadas (tabla(s) → gráfico(s)) y salto de página entre indicadores."""
     # ==========================
     # 1) KPIs
     # ==========================
     kpis_pdf = []
+
+
+    try:
+        if isinstance(estudi_oferta, (list, tuple)) and len(estudi_oferta) >= 3:
+            # Ya me lo has pasado precalculado
+            tabla_estudi_oferta = estudi_oferta
+        else:
+            # Lo calculo yo
+            tabla_estudi_oferta = table_mun_oferta_aux(selected_mun, 2024)
+            # esperamos lista/tupla de 3 dataframes
+            if not isinstance(tabla_estudi_oferta, (list, tuple)) or len(tabla_estudi_oferta) < 3:
+                tabla_estudi_oferta = None
+    except Exception:
+        tabla_estudi_oferta = None
+
 
     def _safe_add_kpi(table_y, table_q, col, label):
         try:
@@ -1696,11 +1732,39 @@ def generar_pdf_municipi_tot(
                      mpl_bar(df_rn, ["Renda neta per llar"], title="", ylab="€ per llar",
                              start_year=max(SERIES_START_YEAR, 2015), force_all_xticks=True))
                 ))
+                
     except Exception:
         pass
     if items_renda:
         sections.append(("Economia — Renda", items_renda))
 
+    # --------- OFERTA DE NOVA CONSTRUCCIÓ (APCE) ---------
+    items_oferta = []
+    try:
+        if tabla_estudi_oferta is not None:
+
+            # 2. Tablas específicas
+            oferta_tables = [
+                (f"Habitatges totals a l'estudi d'oferta de nova construcció APCE 2024 — {selected_mun}",
+                 tabla_estudi_oferta[0].set_index("Variable")),
+
+                (f"Habitatges unifamiliars a l'estudi d'oferta de nova construcció APCE 2024 — {selected_mun}",
+                 tabla_estudi_oferta[1].set_index("Variable")),
+
+                (f"Habitatges plurifamiliars a l'estudi d'oferta de nova construcció APCE 2024 — {selected_mun}",
+                 tabla_estudi_oferta[2].set_index("Variable")),
+            ]
+
+            for titulo_tab, df_tab in oferta_tables:
+                items_oferta.append((
+                    "table",
+                    (titulo_tab, df_tab)
+                ))
+    except Exception:
+        pass
+
+    if items_oferta:
+        sections.append(("Oferta de nova construcció", items_oferta))
 
 
     # ==========================
@@ -1851,6 +1915,8 @@ date_max_ipc = "2025-08-01"
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def import_data(trim_limit, month_limit):
+    with open(path + 'DT_oferta_conjuntura.json', 'r') as outfile:
+        list_estudi = [pd.DataFrame.from_dict(item) for item in json.loads(outfile.read())]
     with open('Idescat.json', 'r') as outfile:
         list_idescat_mun = [pd.DataFrame.from_dict(item) for item in json.loads(outfile.read())]
         idescat_muns= list_idescat_mun[0].copy()
@@ -1909,9 +1975,109 @@ def import_data(trim_limit, month_limit):
     DT_mun_y_def = pd.merge(DT_mun_y_pre2, DT_mun_y_aux3, how="left", on="Fecha")    
     DT_mun_y_def = DT_mun_y_def[[col for col in DT_mun_y_def.columns if any(mun in col for mun in mun_list)]]
 
-    return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine])
+    return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi])
 
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine = import_data("2025-07-01", "2025-08-01")
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi = import_data("2025-07-01", "2025-08-01")
+
+
+@st.cache_resource
+def import_hist_mun(list_estudi):
+    mun_2018_2019 = list_estudi[0].copy()
+    mun_2020_2021 = list_estudi[1].copy()
+    mun_2022 = list_estudi[2].copy()
+    mun_2023 = list_estudi[3].copy()
+    mun_2024 = list_estudi[4].copy()
+    mun_2025 = list_estudi[5].copy()
+    maestro_estudi = list_estudi[6].copy()
+
+    mun_2019 = mun_2018_2019.iloc[:,14:27]
+    mun_2020 = mun_2020_2021.iloc[:,:13]
+    mun_2020 = mun_2020.dropna(how ='all',axis=0)
+    mun_2021 = mun_2020_2021.iloc[:,14:27]
+    mun_2021 = mun_2021.dropna(how ='all',axis=0)
+
+    mun_2022 = mun_2022.iloc[:,14:27]
+    mun_2022 = mun_2022.dropna(how ='all',axis=0)
+
+    mun_2023 = mun_2023.iloc[:,14:27]
+    mun_2023 = mun_2023.dropna(how ='all',axis=0)
+
+    mun_2024 = mun_2024.iloc[:,14:27]
+    mun_2024 = mun_2024.dropna(how ='all',axis=0)
+
+    mun_2025 = mun_2025.iloc[:,14:27]
+    mun_2025 = mun_2025.dropna(how ='all',axis=0)
+
+    return([mun_2019, mun_2020, mun_2021, mun_2022, mun_2023, mun_2024, mun_2025, maestro_estudi])
+mun_2019, mun_2020, mun_2021, mun_2022, mun_2023, mun_2024, mun_2025, maestro_estudi = import_hist_mun(list_estudi)
+@st.cache_resource
+def tidy_data(mun_year, year):
+    df =mun_year.T
+    df.columns = df.iloc[0,:]
+    df = df.iloc[1:,:].reset_index()
+    df.columns.values[:3] = ['Any', 'Tipologia', "Variable"]
+    df['Tipologia'] = df['Tipologia'].ffill()
+    df['Any'] = year
+    geo = df.columns[3:].values
+    df_melted = pd.melt(df, id_vars=['Any', 'Tipologia', 'Variable'], value_vars=geo, value_name='Valor')
+    df_melted.columns.values[3] = 'GEO'
+    return(df_melted)
+
+def table_mun_oferta(Municipi, any_ini, any_fin):
+    df_vf_aux = pd.DataFrame()
+
+    for df_frame, year in zip(["mun_2019", "mun_2020", "mun_2021", "mun_2022", "mun_2023", "mun_2024", "mun_2025"], [2019, 2020, 2021, 2022, 2023, 2024, 2025]):
+        df_vf_aux = pd.concat([df_vf_aux, tidy_data(eval(df_frame), year)], axis=0)
+
+
+    df_vf_aux['Variable']= np.where(df_vf_aux['Variable']=="Preu de     venda per      m² útil (€)", "Preu de venda per m² útil (€)", df_vf_aux['Variable'])
+    df_vf_aux['Valor'] = pd.to_numeric(df_vf_aux['Valor'], errors='coerce')
+    df_vf_aux['GEO'] = np.where(df_vf_aux['GEO']=="Municipis de Catalunya", "Catalunya", df_vf_aux['GEO'])
+    df_vf_aux = df_vf_aux[~df_vf_aux['GEO'].str.contains("província|Província|Municipis")]
+
+    df_vf_merged = pd.merge(df_vf_aux, maestro_estudi, how="left", on="GEO")
+    df_vf_merged = df_vf_merged[~df_vf_merged["Província"].isna()].dropna(axis=1, how="all")
+    df_vf = df_vf_merged[df_vf_merged["Variable"]!="Unitats"]
+    df_unitats = df_vf_merged[df_vf_merged["Variable"]=="Unitats"].drop("Variable", axis=1)
+    df_unitats = df_unitats.rename(columns={"Valor": "Unitats"})
+    df_final_cat = pd.merge(df_vf, df_unitats, how="left")
+    df_final = df_final_cat[df_final_cat["GEO"]!="Catalunya"]
+    df_mun_filtered = df_final[(df_final["GEO"]==Municipi) & (df_final["Any"]>=any_ini) & (df_final["Any"]<=any_fin)].drop(["Àmbits territorials","Corones","Comarques","Província", "codiine"], axis=1).pivot(index=["Any"], columns=["Tipologia", "Variable"], values="Valor")
+    df_mun_unitats = df_final[(df_final["GEO"]==Municipi) & (df_final["Any"]>=any_ini) & (df_final["Any"]<=any_fin)].drop(["Àmbits territorials","Corones","Comarques","Província", "codiine"], axis=1).drop_duplicates(["Any","Tipologia","Unitats"]).pivot(index=["Any"], columns=["Tipologia"], values="Unitats")
+    df_mun_unitats.columns= [("HABITATGES PLURIFAMILIARS", "Unitats"), ("HABITATGES UNIFAMILIARS", "Unitats"), ("TOTAL HABITATGES", "Unitats")]
+    df_mun_n = pd.concat([df_mun_filtered, df_mun_unitats], axis=1)
+    # df_mun_n[("HABITATGES PLURIFAMILIARS", "Unitats %")] = (df_mun_n[("HABITATGES PLURIFAMILIARS", "Unitats")]/df_mun_n[("TOTAL HABITATGES", "Unitats")])*100
+    # df_mun_n[("HABITATGES UNIFAMILIARS", "Unitats %")] = (df_mun_n[("HABITATGES UNIFAMILIARS", "Unitats")] /df_mun_n[("TOTAL HABITATGES", "Unitats")])*100
+    df_mun_n = df_mun_n.sort_index(axis=1, level=[0,1])
+    num_cols = df_mun_n.select_dtypes(include=['float64', 'Int64']).columns
+    df_mun_n[num_cols] = df_mun_n[num_cols].round(0)
+    df_mun_n[num_cols] = df_mun_n[num_cols].astype("Int64")
+    num_cols = df_mun_n.select_dtypes(include=['float64', 'Int64']).columns
+    df_mun_n[num_cols] = df_mun_n[num_cols].map(lambda x: '{:,.0f}'.format(x).replace(',', '#').replace('.', ',').replace('#', '.'))
+    return(df_vf_merged)
+
+def table_mun_oferta_aux(Municipi, any_ini):
+    df_vf_aux = pd.DataFrame()
+
+    for df_frame, year in zip(["mun_2019", "mun_2020", "mun_2021", "mun_2022", "mun_2023", "mun_2024", "mun_2025"], [2019, 2020, 2021, 2022, 2023, 2024, 2025]):
+        df_vf_aux = pd.concat([df_vf_aux, tidy_data(eval(df_frame), year)], axis=0)
+
+
+    df_vf_aux['Variable']= np.where(df_vf_aux['Variable']=="Preu de     venda per      m² útil (€)", "Preu de venda per m² útil (€)", df_vf_aux['Variable'])
+    df_vf_aux['Valor'] = pd.to_numeric(df_vf_aux['Valor'], errors='coerce')
+    df_vf_aux['GEO'] = np.where(df_vf_aux['GEO']=="Municipis de Catalunya", "Catalunya", df_vf_aux['GEO'])
+    df_vf_aux = df_vf_aux[~df_vf_aux['GEO'].str.contains("província|Província|Municipis")]
+
+    df_vf_merged = pd.merge(df_vf_aux, maestro_estudi, how="left", on="GEO")
+    df_vf_merged = df_vf_merged[~df_vf_merged["Província"].isna()].dropna(axis=1, how="all")
+    df_vf_merged = df_vf_merged[(df_vf_merged["GEO"]==Municipi) & (df_vf_merged["Any"]==any_ini)].drop(["GEO","Àmbits territorials","Corones","Comarques","Província", "codiine", "Any"], axis=1)
+    num_cols = df_vf_merged.select_dtypes(include=['float64', 'Int64']).columns
+    df_vf_merged[num_cols] = df_vf_merged[num_cols].round(0)
+    df_vf_merged_total = df_vf_merged[df_vf_merged["Tipologia"]=="TOTAL HABITATGES"].drop("Tipologia", axis=1)
+    df_vf_merged_uni = df_vf_merged[df_vf_merged["Tipologia"]=="HABITATGES UNIFAMILIARS"].drop("Tipologia", axis=1)
+    df_vf_merged_pluri = df_vf_merged[df_vf_merged["Tipologia"]=="HABITATGES PLURIFAMILIARS"].drop("Tipologia", axis=1)
+    return([df_vf_merged_total, df_vf_merged_uni, df_vf_merged_pluri])
+
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
@@ -3882,6 +4048,25 @@ if selected=="Municipis":
                 st.plotly_chart(line_plotly(table_mun, table_mun.columns.tolist(), "Evolució trimestral dels preus per m\u00b2 construït per tipologia d'habitatge", "€/m\u00b2 útil", True), use_container_width=True, responsive=True)
             with right_col:
                 st.plotly_chart(bar_plotly(table_mun_y, table_mun.columns.tolist(), "Evolució anual dels preus per m\u00b2 construït per tipologia d'habitatge", "€/m\u00b2 útil", 2005), use_container_width=True, responsive=True)
+            try:
+                tabla_estudi_oferta = table_mun_oferta(selected_mun, 2019, 2025)
+                st.subheader("Estudi d'Oferta de Nova Construcció (APCE). Municipi de " + selected_mun.split(',')[0].strip())
+                st.markdown(tabla_estudi_oferta.to_html(), unsafe_allow_html=True)
+                st.markdown(
+                    """
+                    <div style="text-align: center; margin-top: 10px; margin-bottom: 10px;">
+                        <a href="https://estudi-oferta.apcebcn.cat/" 
+                        class="button" 
+                        target="_blank" 
+                        rel="noopener noreferrer">
+                        Accedir a l'Estudi d'Oferta
+                        </a>
+                    </div>
+                    """,
+                    unsafe_allow_html=True
+                )
+            except Exception:
+                pass
         if selected_index=="Superfície":
             min_year=2014
             st.subheader(f"SUPERFÍCIE EN M\u00b2 CONSTRUÏTS D'HABITATGE A {selected_mun.upper()}")
@@ -4413,6 +4598,7 @@ if selected=="Informe de mercat":
     left, center, right = st.columns((1,1,1))
     with left:
         selected_mun = st.selectbox("**Selecciona un municipi:**", maestro_mun[maestro_mun["ADD"]=="SI"]["Municipi"].unique(), index= maestro_mun[maestro_mun["ADD"]=="SI"]["Municipi"].tolist().index("Barcelona"), key=602)
+
         st.write("**Descarrega el informe complet del municipi seleccionat:**")
         if st.button("📄 Descarregar informe PDF"):
             with st.spinner(f"Generant informe per a {selected_mun}..."):
@@ -4489,6 +4675,10 @@ if selected=="Informe de mercat":
                 df_mun_idescat = add_last_cols(df_mun_idescat)
                 df_pob_ine  = add_last_cols(df_pob_ine)
 
+                try:
+                    tabla_estudi_oferta = table_mun_oferta_aux(selected_mun, 2024)
+                except:
+                    tabla_estudi_oferta = None
                 nombre_variables = {
                     "AfiliatSS_Agricultura": "Afiliats a la Seguretat Social – Agricultura",
                     "AfiliatSS_Construcció": "Afiliats a la Seguretat Social – Construcció",
@@ -4525,7 +4715,6 @@ if selected=="Informe de mercat":
                 )
 
 
-
                 generar_pdf_municipi_tot(
                     selected_mun=selected_mun,
                     # Producció
@@ -4551,7 +4740,8 @@ if selected=="Informe de mercat":
                     censo_2021=censo_2021,
                     DT_mun_y=DT_mun_y,
                     idescat_muns=idescat_muns,
-                    rentaneta_mun=rentaneta_mun
+                    rentaneta_mun=rentaneta_mun,
+                    estudi_oferta = tabla_estudi_oferta
                 )
 
 # if selected=="Contacte":
