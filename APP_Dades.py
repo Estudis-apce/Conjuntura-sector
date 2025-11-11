@@ -1888,11 +1888,11 @@ with right_col:
             })
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
-max_trim_lloguer= "2025-04-01"
+max_trim_lloguer= "2025-07-01"
 date_max_hipo_aux = "2025-07-01"
 date_max_ciment_aux = "2025-07-01"
-date_max_euribor = "2025-08-01"
-date_max_ipc = "2025-08-01"
+date_max_euribor = "2025-09-01"
+date_max_ipc = "2025-09-01"
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def import_data(trim_limit, month_limit):
@@ -1958,7 +1958,7 @@ def import_data(trim_limit, month_limit):
 
     return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi])
 
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi = import_data("2025-07-01", "2025-08-01")
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi = import_data("2025-07-01", "2025-09-01")
 
 
 @st.cache_resource
@@ -2035,7 +2035,7 @@ def table_mun_oferta(Municipi, any_ini, any_fin):
     df_mun_n[num_cols] = df_mun_n[num_cols].astype("Int64")
     num_cols = df_mun_n.select_dtypes(include=['float64', 'Int64']).columns
     df_mun_n[num_cols] = df_mun_n[num_cols].map(lambda x: '{:,.0f}'.format(x).replace(',', '#').replace('.', ',').replace('#', '.'))
-    return(df_vf_merged)
+    return(df_mun_n)
 
 def table_mun_oferta_aux(Municipi, any_ini):
     df_vf_aux = pd.DataFrame()
