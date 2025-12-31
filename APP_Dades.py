@@ -1889,10 +1889,10 @@ with right_col:
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
 max_trim_lloguer= "2025-07-01"
-date_max_hipo_aux = "2025-07-01"
-date_max_ciment_aux = "2025-07-01"
-date_max_euribor = "2025-09-01"
-date_max_ipc = "2025-09-01"
+date_max_hipo_aux = "2025-10-01"
+date_max_ciment_aux = "2025-11-01"
+date_max_euribor = "2025-11-01"
+date_max_ipc = "2025-11-01"
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def import_data(trim_limit, month_limit):
@@ -1958,7 +1958,7 @@ def import_data(trim_limit, month_limit):
 
     return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi])
 
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi = import_data("2025-07-01", "2025-09-01")
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi = import_data("2025-10-01", "2025-11-01")
 
 
 @st.cache_resource
@@ -2604,7 +2604,7 @@ if selected == "Espanya":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_espanya_q, 2021).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_espanya_q, 2022).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_espanya_q, 2008), f"{selected_index}_Espanya.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
@@ -2946,7 +2946,7 @@ if selected == "Catalunya":
             st.markdown("")
             st.markdown("")
             # st.subheader("**DADES TRIMESTRALS MÉS RECENTS**")
-            st.markdown(table_trim(table_catalunya_q, 2021).to_html(), unsafe_allow_html=True)
+            st.markdown(table_trim(table_catalunya_q, 2022).to_html(), unsafe_allow_html=True)
             st.markdown(filedownload(table_trim(table_catalunya_q, 2014), f"{selected_index}_Catalunya.xlsx"), unsafe_allow_html=True)
             st.markdown("")
             st.markdown("")
