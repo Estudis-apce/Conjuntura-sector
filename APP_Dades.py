@@ -1889,10 +1889,10 @@ with right_col:
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
 max_trim_lloguer= "2025-07-01"
-date_max_hipo_aux = "2025-10-01"
-date_max_ciment_aux = "2025-11-01"
-date_max_euribor = "2025-11-01"
-date_max_ipc = "2025-11-01"
+date_max_hipo_aux = "2025-11-01"
+date_max_ciment_aux = "2025-12-01"
+date_max_euribor = "2025-12-01"
+date_max_ipc = "2025-12-01"
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource
 def import_data(trim_limit, month_limit):
@@ -1958,7 +1958,7 @@ def import_data(trim_limit, month_limit):
 
     return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi])
 
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi = import_data("2025-10-01", "2025-11-01")
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi = import_data("2025-10-01", "2025-12-01")
 
 
 @st.cache_resource
@@ -2587,13 +2587,13 @@ if selected == "Espanya":
             table_espanya_q = table_espanya_q[["Nombre d'hipoteques", "Import d'hipoteques"]]
             table_espanya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","hipon_Nacional", "hipoimp_Nacional"], min_year, max_year,["Any", "Nombre d'hipoteques", "Import d'hipoteques"])
             table_espanya_y = table_espanya_y[["Nombre d'hipoteques", "Import d'hipoteques"]]
-            if selected_year_n==max_year-1:
+            if selected_year_n==max_year:
                 left, right = st.columns((1,1))
                 with left:
                     st.metric(label="**Nombre d'hipoteques**", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Nombre d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), ["Nombre d'hipoteques"], "var", "month_aux")}%""")
                 with right:
                     st.metric(label="**Import d'hipoteques** (Milers d'euros)", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Import d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), ["Import d'hipoteques"], "var", "month_aux")}%""")
-            if selected_year_n!=max_year-1:
+            if selected_year_n!=max_year:
                 left, right = st.columns((1,1))
                 with left:
                     st.metric(label="**Nombre d'hipoteques**", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Nombre d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), "Nombre d'hipoteques", "var")}%""")
@@ -2930,13 +2930,13 @@ if selected == "Catalunya":
             table_catalunya_q = table_catalunya_q[["Nombre d'hipoteques", "Import d'hipoteques"]]
             table_catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","hipon_Catalunya", "hipoimp_Catalunya"], min_year, max_year,["Any", "Nombre d'hipoteques", "Import d'hipoteques"])
             table_catalunya_y = table_catalunya_y[["Nombre d'hipoteques", "Import d'hipoteques"]]
-            if selected_year_n==max_year-1:
+            if selected_year_n==max_year:
                 left, right = st.columns((1,1))
                 with left:
                     st.metric(label="**Nombre d'hipoteques**", value=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Nombre d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_catalunya_y, table_catalunya_m, str(selected_year_n), ["Nombre d'hipoteques"], "var", "month_aux")}%""")
                 with right:
                     st.metric(label="**Import d'hipoteques** (Milers €)", value=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Import d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_catalunya_y, table_catalunya_m, str(selected_year_n), ["Import d'hipoteques"], "var", "month_aux")}%""")
-            if selected_year_n!=max_year-1:
+            if selected_year_n!=max_year:
                 left, right = st.columns((1,1))
                 with left:
                     st.metric(label="**Nombre d'hipoteques**", value=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Nombre d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_catalunya_y, table_catalunya_m, str(selected_year_n), "Nombre d'hipoteques", "var")}%""")
