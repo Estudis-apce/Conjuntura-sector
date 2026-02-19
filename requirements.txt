@@ -14,7 +14,12 @@ geopandas==0.12.2
 PyYAML==6.0.1
 reportlab==3.6.12
 
-shapely==1.8.5
+shapely==2.0.6
 pyproj==3.4.1
 fiona==1.9.4
 mapclassify==2.4.3
+
+folium==0.20.0
+streamlit-folium==0.26.1
+pyogrio==0.12.1
+
