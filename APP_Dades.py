@@ -33,7 +33,10 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 import streamlit.components.v1 as components
 import streamlit_authenticator as stauth
-
+import geopandas as gpd
+import folium
+from streamlit_folium import st_folium
+from streamlit_folium import folium_static
 # ---------------------------
 # ReportLab (PDF)
 # ---------------------------
@@ -62,6 +65,11 @@ from reportlab.platypus import Image as RLImage
 
 from reportlab.platypus.flowables import CondPageBreak
 
+def auto_spinner(func):
+    def wrapper(*args, **kwargs):
+        with st.spinner("Carregant dades..."):
+            return func(*args, **kwargs)
+    return wrapper
 
 # ========== COLORES / CONFIG ==========
 CSS_COLORS = {
@@ -481,8 +489,6 @@ def _styled_table_from_df(df, max_rows: Optional[int] = None, max_cols: int = 12
         ('BOTTOMPADDING', (0,0), (-1,-1), 3),
     ]))
     return tbl
-
-
 def _header_footer(canvas, doc):
     """
     Cabecera y pie para todas las páginas excepto:
@@ -641,21 +647,12 @@ def _header_footer_normal(canvas, doc):
     canvas.restoreState()
 
 
-
 def _header_footer_minimal(canvas, doc):
     # Solo fondo, sin logo ni número ni fuente
     canvas.saveState()
     canvas.setFillColor(_hex_to_rl(CSS_COLORS["bg"]))
     canvas.rect(0, 0, doc.pagesize[0], doc.pagesize[1], stroke=0, fill=1)
     canvas.restoreState()
-
-
-
-
-
-
-
-
 
 def build_location_pdf_ordered(
     location_name: str,
@@ -1722,15 +1719,15 @@ def generar_pdf_municipi_tot(
         try:
             oferta_tables = [
                 (
-                    f"Habitatges totals a l'estudi d'oferta de nova construcció APCE 2024 — {selected_mun}",
+                    f"Habitatges totals a l'estudi d'oferta de nova construcció APCE 2025 — {selected_mun}",
                     tabla_estudi_oferta[0].set_index("Variable")
                 ),
                 (
-                    f"Habitatges unifamiliars a l'estudi d'oferta de nova construcció APCE 2024 — {selected_mun}",
+                    f"Habitatges unifamiliars a l'estudi d'oferta de nova construcció APCE 2025 — {selected_mun}",
                     tabla_estudi_oferta[1].set_index("Variable")
                 ),
                 (
-                    f"Habitatges plurifamiliars a l'estudi d'oferta de nova construcció APCE 2024 — {selected_mun}",
+                    f"Habitatges plurifamiliars a l'estudi d'oferta de nova construcció APCE 2025 — {selected_mun}",
                     tabla_estudi_oferta[2].set_index("Variable")
                 ),
             ]
@@ -1862,15 +1859,14 @@ markdown = f"""
 """
 st.markdown(markdown, unsafe_allow_html=True)
 
-
 left_col, right_col, margin_right = st.columns((0.15, 1, 0.15))
 with right_col:
     selected = option_menu(
         menu_title=None,  # required
-        options=["Espanya","Catalunya","Províncies i àmbits", "Comarques", "Municipis", "Districtes de Barcelona", "Informe de mercat"],  # Dropdown menu
-        icons=[None, None, "map", "map","house-fill", "house-fill",  "file-earmark-text"],  # Icons for dropdown menu
-        menu_icon="cast",  # optional
-        default_index=0,  # optional
+        options=["Espanya","Catalunya","Províncies i àmbits", "Comarques", "Municipis", "Districtes de Barcelona", "Informe de mercat"], #"Mapa interactiu"
+        icons=[None, None, "map", "map","house-fill", "house-fill",  "file-earmark-text"],
+        menu_icon="cast",
+        default_index=0,
         orientation="horizontal",
         styles={
             "container": {"padding": "0px important!", "background-color": "#fcefdc", "align":"justify", "overflow":"hidden"},
@@ -1894,7 +1890,7 @@ date_max_ciment_aux = "2025-12-01"
 date_max_euribor = "2025-12-01"
 date_max_ipc = "2025-12-01"
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def import_data(trim_limit, month_limit):
     with open(path + 'DT_oferta_conjuntura.json', 'r') as outfile:
         list_estudi = [pd.DataFrame.from_dict(item) for item in json.loads(outfile.read())]
@@ -1936,7 +1932,6 @@ def import_data(trim_limit, month_limit):
     maestro_mun= list_of_df[13].copy()
     maestro_dis= list_of_df[14].copy()
 
-
     DT_monthly = DT_monthly[DT_monthly["Fecha"]<=month_limit]
     DT_terr = DT_terr[DT_terr["Fecha"]<=trim_limit]
     DT_mun = DT_mun[DT_mun["Fecha"]<=trim_limit]
@@ -1956,12 +1951,12 @@ def import_data(trim_limit, month_limit):
     DT_mun_y_def = pd.merge(DT_mun_y_pre2, DT_mun_y_aux3, how="left", on="Fecha")    
     DT_mun_y_def = DT_mun_y_def[[col for col in DT_mun_y_def.columns if any(mun in col for mun in mun_list)]]
 
-    return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi])
+    return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi, DT_mun_y])
+import_data = auto_spinner(import_data)
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi, DT_mun_y_all = import_data("2025-10-01", "2025-12-01")
 
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi = import_data("2025-10-01", "2025-12-01")
 
-
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def import_hist_mun(list_estudi):
     mun_2018_2019 = list_estudi[0].copy()
     mun_2020_2021 = list_estudi[1].copy()
@@ -1990,8 +1985,9 @@ def import_hist_mun(list_estudi):
     mun_2025 = mun_2025.dropna(how ='all',axis=0)
 
     return([mun_2019, mun_2020, mun_2021, mun_2022, mun_2023, mun_2024, mun_2025, maestro_estudi])
+import_hist_mun = auto_spinner(import_hist_mun)
 mun_2019, mun_2020, mun_2021, mun_2022, mun_2023, mun_2024, mun_2025, maestro_estudi = import_hist_mun(list_estudi)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def tidy_data(mun_year, year):
     df =mun_year.T
     df.columns = df.iloc[0,:]
@@ -2003,7 +1999,7 @@ def tidy_data(mun_year, year):
     df_melted = pd.melt(df, id_vars=['Any', 'Tipologia', 'Variable'], value_vars=geo, value_name='Valor')
     df_melted.columns.values[3] = 'GEO'
     return(df_melted)
-
+@st.cache_resource(show_spinner=False)
 def table_mun_oferta(Municipi, any_ini, any_fin):
     df_vf_aux = pd.DataFrame()
 
@@ -2036,7 +2032,7 @@ def table_mun_oferta(Municipi, any_ini, any_fin):
     num_cols = df_mun_n.select_dtypes(include=['float64', 'Int64']).columns
     df_mun_n[num_cols] = df_mun_n[num_cols].map(lambda x: '{:,.0f}'.format(x).replace(',', '#').replace('.', ',').replace('#', '.'))
     return(df_mun_n)
-
+@st.cache_resource(show_spinner=False)
 def table_mun_oferta_aux(Municipi, any_ini):
     df_vf_aux = pd.DataFrame()
 
@@ -2061,7 +2057,7 @@ def table_mun_oferta_aux(Municipi, any_ini):
 
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def tidy_Catalunya_m(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output):
     output_data = data_ori[["Fecha"] + columns_sel][(data_ori["Fecha"]>=fecha_ini) & (data_ori["Fecha"]<=fecha_fin)]
     output_data.columns = ["Fecha"] + columns_output
@@ -2071,7 +2067,7 @@ def tidy_Catalunya_m(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output
     return(output_data.drop(["Data", "Month"], axis=1))
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def tidy_Catalunya(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output):
     output_data = data_ori[["Trimestre"] + columns_sel][(data_ori["Fecha"]>=fecha_ini) & (data_ori["Fecha"]<=fecha_fin)]
     output_data.columns = ["Trimestre"] + columns_output
@@ -2079,7 +2075,7 @@ def tidy_Catalunya(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output):
     return(output_data.set_index("Trimestre").drop("Data", axis=1))
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def tidy_Catalunya_anual(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output):
     output_data = data_ori[columns_sel][(data_ori["Fecha"]>=fecha_ini) & (data_ori["Fecha"]<=fecha_fin)]
     output_data.columns = columns_output
@@ -2087,7 +2083,7 @@ def tidy_Catalunya_anual(data_ori, columns_sel, fecha_ini, fecha_fin, columns_ou
     return(output_data.set_index("Any"))
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def tidy_Catalunya_mensual(data_ori, columns_sel, fecha_ini, fecha_fin, columns_output):
     output_data = data_ori[["Fecha"] + columns_sel][(data_ori["Fecha"]>=fecha_ini) & (data_ori["Fecha"]<=fecha_fin)]
     output_data.columns = ["Fecha"] + columns_output
@@ -2095,7 +2091,7 @@ def tidy_Catalunya_mensual(data_ori, columns_sel, fecha_ini, fecha_fin, columns_
     return(output_data.set_index("Fecha"))
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def tidy_present(data_ori, columns_sel, year):
     output_data = data_ori[data_ori[columns_sel]!=0][["Trimestre"] + [columns_sel]].dropna()
     output_data["Trimestre_aux"] = output_data["Trimestre"].str[-1]
@@ -2108,7 +2104,7 @@ def tidy_present(data_ori, columns_sel, year):
     return(output_data.values[0][0])
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def tidy_present_monthly(data_ori, columns_sel, year):
     output_data = data_ori[["Fecha"] + [columns_sel]]
     output_data["Any"] = output_data["Fecha"].dt.year
@@ -2118,7 +2114,7 @@ def tidy_present_monthly(data_ori, columns_sel, year):
     return(output_data.values[0][0])
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def tidy_present_monthly_aux(data_ori, columns_sel, year):
     output_data = data_ori[["Fecha"] + columns_sel].dropna(axis=0)
     output_data["month_aux"] = output_data["Fecha"].dt.month
@@ -2130,7 +2126,7 @@ def tidy_present_monthly_aux(data_ori, columns_sel, year):
     return(output_data.values[0][0])
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def tidy_present_monthly_diff(data_ori, columns_sel, year):
     output_data = data_ori[["Fecha"] + columns_sel].dropna(axis=0)
     output_data["month_aux"] = output_data["Fecha"].dt.month
@@ -2142,7 +2138,7 @@ def tidy_present_monthly_diff(data_ori, columns_sel, year):
     return(output_data.values[0][0])
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def indicator_year(df, df_aux, year, variable, tipus, frequency=None):
     if (year==str(datetime.now().year) and (frequency=="month") and ((tipus=="var") or (tipus=="diff"))):
         return(round(tidy_present_monthly(df_aux, variable, year),2))
@@ -2165,7 +2161,7 @@ def indicator_year(df, df_aux, year, variable, tipus, frequency=None):
         return(round(df.values[0],2))
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def concatenate_lists(list1, list2):
     result_list = []
     for i in list1:
@@ -2185,7 +2181,7 @@ def filedownload(df, filename):
 
 #@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def line_plotly_pob(df, col, title_main, title_y, title_x="Any"):
     fig = px.line(
         df,
@@ -2207,7 +2203,7 @@ def line_plotly_pob(df, col, title_main, title_y, title_x="Any"):
     return fig
 
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def line_plotly(table_n, selection_n, title_main, title_y, title_x="Trimestre", replace_0=False):
     plot_cat = table_n[selection_n]
     if replace_0==True:
@@ -2235,7 +2231,7 @@ def line_plotly(table_n, selection_n, title_main, title_y, title_x="Trimestre", 
     return fig
 
 #@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def bar_plotly(table_n, selection_n, title_main, title_y, year_ini, year_fin=datetime.now().year-1):
     table_n = table_n.reset_index()
     table_n["Any"] = table_n["Any"].astype(int)
@@ -2261,7 +2257,7 @@ def bar_plotly(table_n, selection_n, title_main, title_y, year_ini, year_fin=dat
     fig = go.Figure(data=traces, layout=layout)
     return fig
 #@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def stacked_bar_plotly(table_n, selection_n, title_main, title_y, year_ini, year_fin=datetime.now().year-1):
     table_n = table_n.reset_index()
     table_n["Any"] = table_n["Any"].astype(int)
@@ -2291,7 +2287,7 @@ def stacked_bar_plotly(table_n, selection_n, title_main, title_y, year_ini, year
     fig = go.Figure(data=traces, layout=layout)
     return fig
 #@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def area_plotly(table_n, selection_n, title_main, title_y, trim):
     plot_cat = table_n[table_n.index>=trim][selection_n]
     fig = px.area(plot_cat, x=plot_cat.index, y=plot_cat.columns, title=title_main)
@@ -2307,7 +2303,7 @@ def area_plotly(table_n, selection_n, title_main, title_y, trim):
     )
     return fig
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def bar_plotly_demografia(table_n, selection_n, title_main, title_y, year_ini, year_fin=datetime.now().year-1):
     table_n = table_n.reset_index()
     table_n["Any"] = table_n["Any"].astype(int)
@@ -2335,7 +2331,7 @@ def bar_plotly_demografia(table_n, selection_n, title_main, title_y, year_ini, y
     fig = go.Figure(data=traces, layout=layout)
     return fig
 
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def donut_plotly_demografia(table_n, selection_n, title_main, title_y):
     plot_cat = table_n[selection_n]
     plot_cat = plot_cat.set_index("Tamany").sort_index()
@@ -2361,7 +2357,7 @@ def donut_plotly_demografia(table_n, selection_n, title_main, title_y):
     return fig
 
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
-@st.cache_resource
+@st.cache_resource(show_spinner=False)
 def table_monthly(data_ori, year_ini, rounded=True):
     data_ori = data_ori.reset_index()
     month_mapping_catalan = {
@@ -2442,8 +2438,44 @@ def table_year(data_ori, year_ini, rounded=False, formated=True):
         return(format_dataframes(data_output, True))
     else:
         return(format_dataframes(data_output, False))
-    
-#Defining years
+
+@st.cache_resource(show_spinner=False)
+def load_shp(p):
+    s=gpd.read_file(p); 
+    s["nom_muni"]=s["nom_muni"].astype(str)
+    s["codiine"] = s["codiine"].astype(int)
+    s["geometry"]=s.geometry.simplify(8e-4, preserve_topology=True)
+    return s
+load_shp = auto_spinner(load_shp)
+shapefile_mun = load_shp("shapefile_mun.geojson")
+
+@st.cache_resource(show_spinner=False)
+def tmp_map(DT_mun_y, _shapefile_mun, maestro_mun, var_prefix, any, fecha_col="Fecha"):
+    cols = DT_mun_y.filter(regex=f"^{var_prefix}").columns
+    df_long = (
+        DT_mun_y[[fecha_col] + list(cols)]
+        .melt(id_vars=fecha_col, value_vars=cols,
+              var_name="variable", value_name="valor")
+    )
+    df_long["nom_muni"] = df_long["variable"].str.replace(var_prefix, "", regex=False)
+    df_long = df_long[df_long[fecha_col] == any][["nom_muni", "valor"]].copy()
+    df_long["valor"] = pd.to_numeric(df_long["valor"], errors="coerce")
+    df_long = df_long.merge(
+        maestro_mun[["Codi", "Municipi"]],
+        left_on="nom_muni",
+        right_on="Municipi",
+        how="left"
+    ).dropna()
+    df_long["valor"] = df_long["valor"].replace(0, np.nan)
+    output = _shapefile_mun.merge(
+        df_long[["Codi", "valor"]],
+        left_on="codiine",
+        right_on="Codi",
+        how="left"
+    )
+    return output
+
+# Defining years
 max_year= 2026
 available_years = list(range(2018,max_year))
 index_year = 2025
@@ -4573,7 +4605,47 @@ if selected=="Districtes de Barcelona":
             st.metric("Superfície mitjana dels habitatges", value=f"""{round(censo_2021_dis[censo_2021_dis["Distrito"]==selected_dis]["Superficie Media"].values[0],1)}""")
             st.plotly_chart(donut_plotly_demografia(subset_tamaño_dis_aux,["Tamany", "Llars"], "Distribució del nombre de membres per llar", "Llars"), use_container_width=True, responsive=True)
 
+# if selected=="Mapa interactiu":
+#     opcions = {
+#         "Habitatges iniciats": "iniviv_",
+#         "Habitatges acabats": "finviv_",
+#         "Compravendes d'obra nova": "trvivn_",
+#         "Compravendes de segona mà": "trvivs_",
+#         "Compravendes totals": "trvivt_",
+#         "Preu obra nova per m² construït": "prvivn_",
+#         "Preu segona mà per m² construït": "prvivs_",
+#         "Preu total per m² construït": "prvivt_",
+#     }
+#     left, right = st.columns(2)
+#     with left:
+#         label = st.selectbox("**Selecciona un indicador:**", list(opcions.keys()))
+#     with right:
+#         any = st.selectbox("**Selecciona un any:**", list(range(2015, 2026)), index=list(range(2015, 2026)).index(2025))
+#     var_prefix = opcions[label]
 
+#     tmp = tmp_map(DT_mun_y_all, shapefile_mun, maestro_mun, var_prefix, any)
+#     def folium_mapa_municipis(tmp, _shapefile_mun, any, name_var):
+#         m = folium.Map(location=[41.7, 1.6], zoom_start=8)
+#         folium.Choropleth(
+#             geo_data=_shapefile_mun.__geo_interface__,
+#             data=tmp,
+#             columns=["nom_muni", "valor"],
+#             key_on="feature.properties.nom_muni",
+#             fill_color="YlOrRd",
+#             fill_opacity=0.75,
+#             line_opacity=0.2,
+#             legend_name=f"{name_var} {any}",
+#             nan_fill_opacity=0.0,
+#         ).add_to(m)
+
+#         folium.GeoJson(
+#             tmp.__geo_interface__,
+#             tooltip=folium.GeoJsonTooltip(fields=["nom_muni","valor"], aliases=["Municipi:","Valor:"], localize=True),
+#             style_function=lambda x: {"fillOpacity": 0, "weight": 0.3},
+#         ).add_to(m)
+#         return m
+
+#     st_folium(folium_mapa_municipis(tmp, shapefile_mun, any, label), use_container_width=True, height=800)
 
 if selected=="Informe de mercat":
     left, center, right = st.columns((1,1,1))
@@ -4657,7 +4729,7 @@ if selected=="Informe de mercat":
                 df_pob_ine  = add_last_cols(df_pob_ine)
 
                 try:
-                    tabla_estudi_oferta = table_mun_oferta_aux(selected_mun, 2024)
+                    tabla_estudi_oferta = table_mun_oferta_aux(selected_mun, 2025)
                 except:
                     tabla_estudi_oferta = None
                 nombre_variables = {
