@@ -18,3 +18,5 @@ shapely==1.8.5
 pyproj==3.4.1
 fiona==1.9.4
 mapclassify==2.4.3
+streamlit_folium==0.22.0
+folium==0.17.0
