@@ -2621,13 +2621,13 @@ if selected == "Espanya":
             table_espanya_q = table_espanya_q[["Nombre d'hipoteques", "Import d'hipoteques"]]
             table_espanya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","hipon_Nacional", "hipoimp_Nacional"], min_year, max_year,["Any", "Nombre d'hipoteques", "Import d'hipoteques"])
             table_espanya_y = table_espanya_y[["Nombre d'hipoteques", "Import d'hipoteques"]]
-            if selected_year_n==max_year:
+            if selected_year_n==max_year-1:
                 left, right = st.columns((1,1))
                 with left:
                     st.metric(label="**Nombre d'hipoteques**", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Nombre d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), ["Nombre d'hipoteques"], "var", "month_aux")}%""")
                 with right:
                     st.metric(label="**Import d'hipoteques** (Milers d'euros)", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Import d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), ["Import d'hipoteques"], "var", "month_aux")}%""")
-            if selected_year_n!=max_year:
+            if selected_year_n!=max_year-1:
                 left, right = st.columns((1,1))
                 with left:
                     st.metric(label="**Nombre d'hipoteques**", value=f"""{indicator_year(table_espanya_y, table_espanya_q, str(selected_year_n), "Nombre d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_espanya_y, table_espanya_m, str(selected_year_n), "Nombre d'hipoteques", "var")}%""")
@@ -2964,13 +2964,13 @@ if selected == "Catalunya":
             table_catalunya_q = table_catalunya_q[["Nombre d'hipoteques", "Import d'hipoteques"]]
             table_catalunya_y = tidy_Catalunya_anual(DT_terr_y, ["Fecha","hipon_Catalunya", "hipoimp_Catalunya"], min_year, max_year,["Any", "Nombre d'hipoteques", "Import d'hipoteques"])
             table_catalunya_y = table_catalunya_y[["Nombre d'hipoteques", "Import d'hipoteques"]]
-            if selected_year_n==max_year:
+            if selected_year_n==max_year-1:
                 left, right = st.columns((1,1))
                 with left:
                     st.metric(label="**Nombre d'hipoteques**", value=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Nombre d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_catalunya_y, table_catalunya_m, str(selected_year_n), ["Nombre d'hipoteques"], "var", "month_aux")}%""")
                 with right:
                     st.metric(label="**Import d'hipoteques** (Milers €)", value=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Import d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_catalunya_y, table_catalunya_m, str(selected_year_n), ["Import d'hipoteques"], "var", "month_aux")}%""")
-            if selected_year_n!=max_year:
+            if selected_year_n!=max_year-1:
                 left, right = st.columns((1,1))
                 with left:
                     st.metric(label="**Nombre d'hipoteques**", value=f"""{indicator_year(table_catalunya_y, table_catalunya_q, str(selected_year_n), "Nombre d'hipoteques", "level"):,.0f}""", delta=f"""{indicator_year(table_catalunya_y, table_catalunya_m, str(selected_year_n), "Nombre d'hipoteques", "var")}%""")
