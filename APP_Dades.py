@@ -1887,8 +1887,8 @@ with right_col:
 
 #Trimestre lloguer. Única variable que introduce 0s en lugar de NaNs
 max_trim_lloguer= "2025-07-01"
-date_max_hipo_aux = "2025-11-01"
-date_max_ciment_aux = "2025-12-01"
+date_max_hipo_aux = "2026-01-01"
+date_max_ciment_aux = "2026-01-01"
 date_max_euribor = "2025-12-01"
 date_max_ipc = "2025-12-01"
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
@@ -1955,7 +1955,7 @@ def import_data(trim_limit, month_limit):
 
     return([DT_monthly, DT_terr, DT_terr_y, DT_mun_def, DT_mun_y_def, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi, DT_mun_y])
 import_data = auto_spinner(import_data)
-DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi, DT_mun_y_all = import_data("2025-10-01", "2025-12-01")
+DT_monthly, DT_terr, DT_terr_y, DT_mun, DT_mun_y, DT_dis, DT_dis_y, maestro_mun, maestro_dis, censo_2021, rentaneta_mun, censo_2021_dis, rentaneta_dis, idescat_muns, df_mun_idescat, df_pob_ine, list_estudi, DT_mun_y_all = import_data("2026-01-01", "2026-01-01")
 
 
 @st.cache_resource(show_spinner=False)
@@ -2142,13 +2142,13 @@ def tidy_present_monthly_diff(data_ori, columns_sel, year):
 ##@st.cache_data(show_spinner="**Carregant les dades... Esperi, siusplau**", max_entries=500)
 @st.cache_resource(show_spinner=False)
 def indicator_year(df, df_aux, year, variable, tipus, frequency=None):
-    if (year==str(datetime.now().year) and (frequency=="month") and ((tipus=="var") or (tipus=="diff"))):
+    if (year==str(datetime.now().year-1) and (frequency=="month") and ((tipus=="var") or (tipus=="diff"))):
         return(round(tidy_present_monthly(df_aux, variable, year),2))
-    if (year==str(datetime.now().year) and (frequency=="month_aux") and (tipus=="var")):
+    if (year==str(datetime.now().year-1) and (frequency=="month_aux") and (tipus=="var")):
         return(round(tidy_present_monthly_aux(df_aux, variable, year),2))
-    if (year==str(datetime.now().year) and (frequency=="month_aux") and ((tipus=="diff"))):
+    if (year==str(datetime.now().year-1) and (frequency=="month_aux") and ((tipus=="diff"))):
         return(round(tidy_present_monthly_diff(df_aux, variable, year),2))
-    if (year==str(datetime.now().year) and ((tipus=="var") or (tipus=="diff"))):
+    if (year==str(datetime.now().year-1) and ((tipus=="var") or (tipus=="diff"))):
         return(round(tidy_present(df_aux.reset_index(), variable, year),2))
     if tipus=="level":
         df = df[df.index==year][variable]
@@ -3002,7 +3002,7 @@ if selected == "Catalunya":
                 min_year=2008
                 st.subheader("PRODUCCIÓ D'HABITATGES A CATALUNYA")
                 st.markdown(f'<div class="custom-box">ANY {selected_year_n}</div>', unsafe_allow_html=True)
-                table_cat_m = tidy_Catalunya_m(DT_monthly, ["Fecha"] + concatenate_lists(["iniviv_","finviv_"], "Catalunya"), f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Habitatges iniciats", "Habitatges acabats"])     
+                table_cat_m = tidy_Catalunya_m(DT_monthly, ["Fecha"] + concatenate_lists(["iniviv_","finviv_"], "Catalunya"), f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Habitatges iniciats", "Habitatges acabats"])    
                 table_Catalunya = tidy_Catalunya(DT_terr, ["Fecha"] + concatenate_lists(["iniviv_","iniviv_uni_", "iniviv_pluri_","finviv_","finviv_uni_", "finviv_pluri_"], "Catalunya") + concatenate_lists(["calprov_", "calprovpub_", "calprovpriv_", "caldef_", "caldefpub_", "caldefpriv_"], "Cataluña"), f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Habitatges iniciats","Habitatges iniciats unifamiliars", "Habitatges iniciats plurifamiliars", "Habitatges acabats", "Habitatges acabats unifamiliars", "Habitatges acabats plurifamiliars",
                                                                                                                                                                                                                                                                                                                                    "Qualificacions provisionals d'HPO", "Qualificacions provisionals d'HPO (Promotor públic)", "Qualificacions provisionals d'HPO (Promotor privat)", 
                                                                                                                                                                                                                                                                                                                                     "Qualificacions definitives d'HPO",  "Qualificacions definitives d'HPO (Promotor públic)", "Qualificacions definitives d'HPO (Promotor privat)"])
@@ -3013,7 +3013,7 @@ if selected == "Catalunya":
                 table_Catalunya_uni = tidy_Catalunya(DT_terr, ["Fecha"] + concatenate_lists(["iniviv_uni_50m2_","iniviv_uni_5175m2_", "iniviv_uni_76100m2_","iniviv_uni_101125m2_", "iniviv_uni_126150m2_", "iniviv_uni_150m2_"], "Catalunya"), f"{str(min_year)}-01-01", f"{str(max_year)}-01-01",["Data", "Unifamiliar fins a 50m2","Unifamiliar entre 51m2 i 75 m2", "Unifamiliar entre 76m2 i 100m2","Unifamiliar entre 101m2 i 125m2", "Unifamiliar entre 126m2 i 150m2", "Unifamiliar de més de 150m2"])
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Habitatges iniciats**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Habitatges iniciats", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_cat_m, str(selected_year_n), "Habitatges iniciats", "var", "month")}%""")
+                    st.metric(label="**Habitatges iniciats**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Habitatges iniciats", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Habitatges iniciats", "var")}%""")
                 with center:
                     try:
                         st.metric(label="**Habitatges iniciats plurifamiliars**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Habitatges iniciats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Habitatges iniciats plurifamiliars", "var")}%""")
@@ -3026,7 +3026,7 @@ if selected == "Catalunya":
                         st.metric(label="**Habitatges iniciats unifamiliars**", value="No disponible")
                 left, center, right = st.columns((1,1,1))
                 with left:
-                    st.metric(label="**Habitatges acabats**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Habitatges acabats", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_cat_m, str(selected_year_n), "Habitatges acabats", "var", "month")}%""")
+                    st.metric(label="**Habitatges acabats**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Habitatges acabats", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Habitatges acabats", "var")}%""")
                 with center:
                     try:
                         st.metric(label="**Habitatges acabats plurifamiliars**", value=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Habitatges acabats plurifamiliars", "level"):,.0f}""", delta=f"""{indicator_year(table_Catalunya_y, table_Catalunya, str(selected_year_n), "Habitatges acabats plurifamiliars", "var")}%""")
