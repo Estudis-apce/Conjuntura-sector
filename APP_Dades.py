@@ -3836,7 +3836,7 @@ if selected=="Comarques":
             st.markdown(filedownload(table_year(table_com_y, 2014, True, False), f"{selected_index}_{selected_com}_anual.xlsx"), unsafe_allow_html=True)
             left_col, right_col = st.columns((1,1))
             with left_col:
-                st.plotly_chart(line_plotly(table_com, table_com.columns.tolist(), "Evolució trimestral dels preus per m\u00b2 construït per tipologia d'habitatge", "€/m\u00b2 útil"), use_container_width=True, responsive=True)
+                st.plotly_chart(line_plotly(table_com, table_com.columns.tolist(), "Evolució trimestral dels preus per m\u00b2 construït per tipologia d'habitatge", "€/m\u00b2 útil", "Trimestre"), use_container_width=True, responsive=True)
             with right_col:
                 st.plotly_chart(bar_plotly(table_com_y, table_com.columns.tolist(), "Evolució anual dels preus per m\u00b2 construït per tipologia d'habitatge", "€/m\u00b2 útil", 2005), use_container_width=True, responsive=True)
         if selected_index=="Superfície":
@@ -4060,7 +4060,7 @@ if selected=="Municipis":
             st.markdown(filedownload(table_year(table_mun_y, 2014, True, False), f"{selected_index}_{selected_mun}_anual.xlsx"), unsafe_allow_html=True)
             left_col, right_col = st.columns((1,1))
             with left_col:
-                st.plotly_chart(line_plotly(table_mun, table_mun.columns.tolist(), "Evolució trimestral dels preus per m\u00b2 construït per tipologia d'habitatge", "€/m\u00b2 útil", True), use_container_width=True, responsive=True)
+                st.plotly_chart(line_plotly(table_mun, table_mun.columns.tolist(), "Evolució trimestral dels preus per m\u00b2 construït per tipologia d'habitatge", "€/m\u00b2 útil", "Trimestre", True), use_container_width=True, responsive=True)
             with right_col:
                 st.plotly_chart(bar_plotly(table_mun_y, table_mun.columns.tolist(), "Evolució anual dels preus per m\u00b2 construït per tipologia d'habitatge", "€/m\u00b2 útil", 2005), use_container_width=True, responsive=True)
             try:
@@ -4503,7 +4503,7 @@ if selected=="Districtes de Barcelona":
             st.markdown(filedownload(table_year(table_dis_y, 2017, True, False), f"{selected_index}_{selected_dis}_anual.xlsx"), unsafe_allow_html=True)
             left_col, right_col = st.columns((1,1))
             with left_col:
-                st.plotly_chart(line_plotly(table_dis.iloc[12:,:], table_dis.columns.tolist(), "Evolució trimestral dels preus per m\u00b2 construït per tipologia d'habitatge", "€/m2 útil", True), use_container_width=True, responsive=True)
+                st.plotly_chart(line_plotly(table_dis.iloc[12:,:], table_dis.columns.tolist(), "Evolució trimestral dels preus per m\u00b2 construït per tipologia d'habitatge", "€/m2 útil", "Trimestre",True), use_container_width=True, responsive=True)
             with right_col:
                 st.plotly_chart(bar_plotly(table_dis_y, table_dis.columns.tolist(), "Evolució anual dels preus per m\u00b2 construït per tipologia d'habitatge", "€/m2 útil", 2017), use_container_width=True, responsive=True)
         if selected_index=="Superfície":
